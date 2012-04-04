@@ -48,7 +48,9 @@
    {application_controller, pulse_application_controller},
    {application_master, pulse_application_master},
    {application_starter, pulse_application_starter},
-   {gen_server, pulse_gen_server}]}).
+   {gen_server, pulse_gen_server},
+   {real_application, application} %% Trick to call the real otp module
+  ]}).
 
 -define(ac_tab, pulse_ac_tab).
 
@@ -1310,30 +1312,32 @@ unload(AppName, S) ->
 		  end
 	  end, S, IncApps).
 
+%% pulse_otp, check both internal state AND the real application-manager!
 check_start_cond(AppName, RestartType, Started, Running) ->
     validRestartType(RestartType),
     case get_loaded(AppName) of
-	{true, Appl} ->
-	    %% Check Running; not Started.  An exited app is not running,
-	    %% but started.  It must be possible to start an exited app!
-	    case lists:keymember(AppName, 1, Running) of
-		true ->
-		    {error, {already_started, AppName}};
-		false ->
-		    foreach(
-		      fun(kernel) -> ok;  %% TODO
-                         (stdlib) -> ok;
-                         (AppName2) ->
-			      case lists:keymember(AppName2, 1, Started) of
-				  true -> ok;
-				  false ->
-				      throw({error, {not_started, AppName2}})
-			      end
-		      end, Appl#appl.apps),
-		    {ok, Appl}
-	    end;
-	false ->
-	    {error, {not_loaded, AppName}}
+        {true, Appl} ->
+            %% Check Running; not Started.  An exited app is not running,
+            %% but started.  It must be possible to start an exited app!
+            ReallyRunning = real_application:which_applications(),
+            case lists:keymember(AppName, 1, Running) orelse
+              lists:keymember(AppName, 1, ReallyRunning) of
+                true ->
+                    {error, {already_started, AppName}};
+                false ->
+                    foreach(
+                      fun(AppName2) ->
+                              case lists:keymember(AppName2, 1, Started) orelse
+                                lists:keymember(AppName2, 1, ReallyRunning) of
+                                  true -> ok;
+                                  false ->
+                                      throw({error, {not_started, AppName2}})
+                              end
+                      end, Appl#appl.apps),
+                    {ok, Appl}
+            end;
+        false ->
+            {error, {not_loaded, AppName}}
     end.
 
 do_start(AppName, RT, Type, From, S) ->
@@ -1377,31 +1381,31 @@ reply(undefined, _Reply) ->
     ok;
 reply(From, Reply) -> gen_server:reply(From, Reply).
 
+%% pulse_otp, check both internal state AND the real application-manager!
 start_appl(Appl, S, Type) ->
     ApplData = Appl#appl.appl_data,
     case ApplData#appl_data.mod of
-	[] ->
-	    {ok, undefined};
-	_ ->
-	    %% Name = ApplData#appl_data.name,
-	    Running = S#state.running,
-	    foreach(
-	      fun(kernel) -> ok;
-                 (stdlib) -> ok;
-                 (AppName) ->
-		      case lists:keymember(AppName, 1, Running) of
-			  true ->
-			      ok;
-			  false ->
-			      throw({info, {not_running, AppName}})
-		      end
-	      end, Appl#appl.apps),
-	    case application_master:start_link(ApplData, Type) of
-		{ok, _Pid} = Ok ->
-		    Ok;
-		{error, _Reason} = Error ->
-		    throw(Error)
-	    end
+        [] ->
+            {ok, undefined};
+        _ ->
+            %% Name = ApplData#appl_data.name,
+            Running = S#state.running,
+            foreach(
+              fun(AppName) ->
+                      case lists:keymember(AppName, 1, Running) orelse
+                        lists:keymember(AppName, 1, real_application:which_applications()) of
+                          true ->
+                              ok;
+                          false ->
+                              throw({info, {not_running, AppName}})
+                      end
+              end, Appl#appl.apps),
+            case application_master:start_link(ApplData, Type) of
+                {ok, _Pid} = Ok ->
+                    Ok;
+                {error, _Reason} = Error ->
+                    throw(Error)
+            end
     end.
 
     
