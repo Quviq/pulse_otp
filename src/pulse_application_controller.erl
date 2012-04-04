@@ -19,28 +19,28 @@
 -module(pulse_application_controller).
 
 %% External exports
--export([start/1, 
-	 load_application/1, unload_application/1, 
-	 start_application/2, start_boot_application/2, stop_application/1,
-	 control_application/1,
-	 change_application_data/2, prep_config_change/0, config_change/1,
-	 which_applications/0, which_applications/1,
-	 loaded_applications/0, info/0,
-	 get_pid_env/2, get_env/2, get_pid_all_env/1, get_all_env/1,
-	 get_pid_key/2, get_key/2, get_pid_all_key/1, get_all_key/1,
-	 get_master/1, get_application/1, get_application_module/1,
-	 start_type/1, permit_application/2, do_config_diff/2,
-	 set_env/3, set_env/4, unset_env/2, unset_env/3]).
+-export([start/0, start/1,
+         load_application/1, unload_application/1,
+         start_application/2, start_boot_application/2, stop_application/1,
+         control_application/1,
+         change_application_data/2, prep_config_change/0, config_change/1,
+         which_applications/0, which_applications/1,
+         loaded_applications/0, info/0,
+         get_pid_env/2, get_env/2, get_pid_all_env/1, get_all_env/1,
+         get_pid_key/2, get_key/2, get_pid_all_key/1, get_all_key/1,
+         get_master/1, get_application/1, get_application_module/1,
+         start_type/1, permit_application/2, do_config_diff/2,
+         set_env/3, set_env/4, unset_env/2, unset_env/3]).
 
 %% Internal exports
--export([handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
-	 code_change/3, init_starter/4, get_loaded/1]).
+-export([handle_call/3, handle_cast/2, handle_info/2, terminate/2,
+         code_change/3, init_starter/4, get_loaded/1]).
 
 %% Test exports, only to be used from the test suites
 -export([test_change_apps/2]).
 
 -import(lists, [zf/2, map/2, foreach/2, foldl/3,
-		keyfind/3, keydelete/3, keyreplace/4]).
+                keyfind/3, keydelete/3, keyreplace/4]).
 
 -compile({parse_transform, pulse_instrument}).
 -compile({pulse_replace_module,
@@ -205,7 +205,11 @@ start(KernelApp) ->
 	{'EXIT', _Pid, Reason} ->
 	    to_string(Reason)
     end.
-	
+
+%% pulse_otp - Default start
+start() ->
+  start({application, kernel, []}).
+
 %%-----------------------------------------------------------------
 %% Func: load_application/1
 %% Args: Application = appl_descr() | atom()

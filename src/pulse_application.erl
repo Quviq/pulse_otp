@@ -99,6 +99,12 @@ load(Application, DistNodes) ->
 
 %% Workaround due to specs.
 load1(Application, DistNodes) ->
+    %% Since pulse_application_controller is not started by the init-process
+    %% (which is the case for application_controller), do an extra check here...
+    case whereis(pulse_application_controller) of
+      undefined -> pulse_application_controller:start();
+      _Pid -> ok
+    end,
     case application_controller:load_application(Application) of
         ok when DistNodes =/= [] ->
             AppName = get_appl_name(Application),
