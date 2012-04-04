@@ -70,7 +70,7 @@
 %%% may be running on one node at the time.
 %%%
 %%% The external API to this module is in the module 'application'.
-%%% 
+%%%
 %%% The process that controls distributed applications (called dist
 %%% ac).  calls application_controller:control_application(Name) to
 %%% take responsibility for an application.  The interface between AC
@@ -144,7 +144,7 @@
 -type appname() :: atom().
 
 -record(state, {loading = [], starting = [], start_p_false = [], running = [],
-		control = [], started = [], start_req = [], conf_data}).
+                control = [], started = [], start_req = [], conf_data}).
 -type state() :: #state{}.
 
 %%-----------------------------------------------------------------
@@ -200,12 +200,12 @@ start(KernelApp) ->
     Init = self(),
     AC = spawn_link(fun() -> init(Init, KernelApp) end),
     receive
-	{ack, AC, ok} ->
-	    {ok, AC};
-	{ack, AC, {error, Reason}} ->
-	    to_string(Reason); % init doesn't want error tuple, only a reason
-	{'EXIT', _Pid, Reason} ->
-	    to_string(Reason)
+        {ack, AC, ok} ->
+            {ok, AC};
+        {ack, AC, {error, Reason}} ->
+            to_string(Reason); % init doesn't want error tuple, only a reason
+        {'EXIT', _Pid, Reason} ->
+            to_string(Reason)
     end.
 
 %% pulse_otp - Default start
@@ -253,22 +253,22 @@ start_application(AppName, RestartType) ->
 %% Func: start_boot_application/2
 %% The same as start_application/2 expect that this function is
 %% called from the boot script file. It mustnot be used by the operator.
-%% This function will cause a node crash if a permanent application 
+%% This function will cause a node crash if a permanent application
 %% fails to boot start
 %%-----------------------------------------------------------------
 start_boot_application(Application, RestartType) ->
     case {application:load(Application), RestartType} of
-	{ok, _} ->
-	    AppName = get_appl_name(Application),
-	    gen_server:call(?AC, {start_application, AppName, RestartType}, infinity);
-	{{error, {already_loaded, AppName}}, _} ->
-	    gen_server:call(?AC, {start_application, AppName, RestartType}, infinity);
-	{{error,{bad_environment_value,Env}}, permanent} ->
-	    Txt = io_lib:format("Bad environment variable: ~p  Application: ~p",
-				[Env, Application]),
-	    exit({error, list_to_atom(lists:flatten(Txt))});
-	{Error, _} ->
-	    Error
+        {ok, _} ->
+            AppName = get_appl_name(Application),
+            gen_server:call(?AC, {start_application, AppName, RestartType}, infinity);
+        {{error, {already_loaded, AppName}}, _} ->
+            gen_server:call(?AC, {start_application, AppName, RestartType}, infinity);
+        {{error,{bad_environment_value,Env}}, permanent} ->
+            Txt = io_lib:format("Bad environment variable: ~p  Application: ~p",
+                                [Env, Application]),
+            exit({error, list_to_atom(lists:flatten(Txt))});
+        {Error, _} ->
+            Error
     end.
 
 stop_application(AppName) ->
@@ -278,22 +278,22 @@ stop_application(AppName) ->
 %% Returns: [{Name, Descr, Vsn}]
 %%-----------------------------------------------------------------
 which_applications() ->
-    gen_server:call(?AC, which_applications).    
+    gen_server:call(?AC, which_applications).
 which_applications(Timeout) ->
     gen_server:call(?AC, which_applications, Timeout).
 
 loaded_applications() ->
     ets:filter(?ac_tab,
-	       fun([{{loaded, AppName}, #appl{descr = Descr, vsn = Vsn}}]) ->
-		       {true, {AppName, Descr, Vsn}};
-		  (_) ->
-		       false
-	       end,
-	       []).
+               fun([{{loaded, AppName}, #appl{descr = Descr, vsn = Vsn}}]) ->
+                       {true, {AppName, Descr, Vsn}};
+                  (_) ->
+                       false
+               end,
+               []).
 
 %% Returns some debug info
 info() ->
-    gen_server:call(?AC, info).    
+    gen_server:call(?AC, info).
 
 control_application(AppName) ->
     gen_server:call(?AC, {control_application, AppName}, infinity).
@@ -321,121 +321,121 @@ control_application(AppName) ->
 %%          some applicatation may have got new config data.
 %%-----------------------------------------------------------------
 change_application_data(Applications, Config) ->
-    gen_server:call(?AC, 
-		    {change_application_data, Applications, Config},
-		    infinity).
+    gen_server:call(?AC,
+                    {change_application_data, Applications, Config},
+                    infinity).
 
 prep_config_change() ->
-    gen_server:call(?AC, 
-		    prep_config_change,
-		    infinity).
+    gen_server:call(?AC,
+                    prep_config_change,
+                    infinity).
 
 
 config_change(EnvPrev) ->
-    gen_server:call(?AC, 
-		    {config_change, EnvPrev},
-		    infinity).
+    gen_server:call(?AC,
+                    {config_change, EnvPrev},
+                    infinity).
 
 
 
 get_pid_env(Master, Key) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> get_env(AppName, Key);
-	_ -> undefined
+        [[AppName]] -> get_env(AppName, Key);
+        _ -> undefined
     end.
 
 get_env(AppName, Key) ->
     case ets:lookup(?ac_tab, {env, AppName, Key}) of
-	[{_, Val}] -> {ok, Val};
-	_ -> undefined
+        [{_, Val}] -> {ok, Val};
+        _ -> undefined
     end.
 
 get_pid_all_env(Master) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> get_all_env(AppName);
-	_ -> []
+        [[AppName]] -> get_all_env(AppName);
+        _ -> []
     end.
 
 get_all_env(AppName) ->
     map(fun([Key, Val]) -> {Key, Val} end,
-	ets:match(?ac_tab, {{env, AppName, '$1'}, '$2'})).
+        ets:match(?ac_tab, {{env, AppName, '$1'}, '$2'})).
 
 
 
 
 get_pid_key(Master, Key) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> get_key(AppName, Key);
-	_ -> undefined
+        [[AppName]] -> get_key(AppName, Key);
+        _ -> undefined
     end.
 
 get_key(AppName, Key) ->
     case ets:lookup(?ac_tab, {loaded, AppName}) of
-	[{_, Appl}] ->
-	    case Key of 
-		description ->
-		    {ok, Appl#appl.descr};
-		id ->
-		    {ok, Appl#appl.id};
-		vsn ->
-		    {ok, Appl#appl.vsn};
-		modules ->
-		    {ok, (Appl#appl.appl_data)#appl_data.mods};
-		maxP ->
-		    {ok, (Appl#appl.appl_data)#appl_data.maxP};
-		maxT ->
-		    {ok, (Appl#appl.appl_data)#appl_data.maxT};
-		registered ->
-		    {ok, (Appl#appl.appl_data)#appl_data.regs};
-		included_applications ->
-		    {ok, Appl#appl.inc_apps};
-		applications ->
-		    {ok, Appl#appl.apps};
-		env ->
-		    {ok, get_all_env(AppName)};
-		mod ->
-		    {ok, (Appl#appl.appl_data)#appl_data.mod};
-		start_phases ->
-		    {ok, (Appl#appl.appl_data)#appl_data.phases};
-		_ -> undefined
-	    end;
-	_ ->
-	    undefined
+        [{_, Appl}] ->
+            case Key of
+                description ->
+                    {ok, Appl#appl.descr};
+                id ->
+                    {ok, Appl#appl.id};
+                vsn ->
+                    {ok, Appl#appl.vsn};
+                modules ->
+                    {ok, (Appl#appl.appl_data)#appl_data.mods};
+                maxP ->
+                    {ok, (Appl#appl.appl_data)#appl_data.maxP};
+                maxT ->
+                    {ok, (Appl#appl.appl_data)#appl_data.maxT};
+                registered ->
+                    {ok, (Appl#appl.appl_data)#appl_data.regs};
+                included_applications ->
+                    {ok, Appl#appl.inc_apps};
+                applications ->
+                    {ok, Appl#appl.apps};
+                env ->
+                    {ok, get_all_env(AppName)};
+                mod ->
+                    {ok, (Appl#appl.appl_data)#appl_data.mod};
+                start_phases ->
+                    {ok, (Appl#appl.appl_data)#appl_data.phases};
+                _ -> undefined
+            end;
+        _ ->
+            undefined
     end.
-	    
+
 get_pid_all_key(Master) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> get_all_key(AppName);
-	_ -> []
+        [[AppName]] -> get_all_key(AppName);
+        _ -> []
     end.
 
 get_all_key(AppName) ->
     case ets:lookup(?ac_tab, {loaded, AppName}) of
-	[{_, Appl}] ->
-	    {ok, [{description, Appl#appl.descr},
-		  {id, Appl#appl.id},
-		  {vsn, Appl#appl.vsn},
-		  {modules, (Appl#appl.appl_data)#appl_data.mods},
-		  {maxP, (Appl#appl.appl_data)#appl_data.maxP},
-		  {maxT, (Appl#appl.appl_data)#appl_data.maxT},
-		  {registered, (Appl#appl.appl_data)#appl_data.regs},
-		  {included_applications, Appl#appl.inc_apps},
-		  {applications, Appl#appl.apps},
-		  {env, get_all_env(AppName)},
-		  {mod, (Appl#appl.appl_data)#appl_data.mod},
-		  {start_phases, (Appl#appl.appl_data)#appl_data.phases}
-		 ]};
-	_ -> 
-	    undefined
+        [{_, Appl}] ->
+            {ok, [{description, Appl#appl.descr},
+                  {id, Appl#appl.id},
+                  {vsn, Appl#appl.vsn},
+                  {modules, (Appl#appl.appl_data)#appl_data.mods},
+                  {maxP, (Appl#appl.appl_data)#appl_data.maxP},
+                  {maxT, (Appl#appl.appl_data)#appl_data.maxT},
+                  {registered, (Appl#appl.appl_data)#appl_data.regs},
+                  {included_applications, Appl#appl.inc_apps},
+                  {applications, Appl#appl.apps},
+                  {env, get_all_env(AppName)},
+                  {mod, (Appl#appl.appl_data)#appl_data.mod},
+                  {start_phases, (Appl#appl.appl_data)#appl_data.phases}
+                 ]};
+        _ ->
+            undefined
     end.
 
 
 start_type(Master) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> 
-	    gen_server:call(?AC, {start_type, AppName}, infinity);
-	_X -> 
-	    undefined
+        [[AppName]] ->
+            gen_server:call(?AC, {start_type, AppName}, infinity);
+        _X ->
+            undefined
     end.
 
 
@@ -445,14 +445,14 @@ start_type(Master) ->
 
 get_master(AppName) ->
     case ets:lookup(?ac_tab, {application_master, AppName}) of
-	[{_, Pid}] -> Pid;
-	_ -> undefined
+        [{_, Pid}] -> Pid;
+        _ -> undefined
     end.
 
 get_application(Master) ->
     case ets:match(?ac_tab, {{application_master, '$1'}, Master}) of
-	[[AppName]] -> {ok, AppName};
-	_ -> undefined
+        [[AppName]] -> {ok, AppName};
+        _ -> undefined
     end.
 
 get_application_module(Module) ->
@@ -463,10 +463,10 @@ get_application_module(Module) ->
 
 get_application_module(Module, [[AppName, Modules]|AppModules]) ->
     case in_modules(Module, Modules) of
-	true ->
-	    {ok, AppName};
-	false ->
-	    get_application_module(Module, AppModules)
+        true ->
+            {ok, AppName};
+        false ->
+            get_application_module(Module, AppModules)
     end;
 get_application_module(_Module, []) ->
     undefined.
@@ -482,9 +482,9 @@ in_modules(_Module, []) ->
     false.
 
 permit_application(ApplName, Flag) ->
-    gen_server:call(?AC, 
-		    {permit_application, ApplName, Flag},
-		    infinity).
+    gen_server:call(?AC,
+                    {permit_application, ApplName, Flag},
+                    infinity).
 
 
 set_env(AppName, Key, Val) ->
@@ -507,15 +507,15 @@ init(Init, Kernel) ->
     put('$initial_call', {?MODULE, start, 1}),
 
     case catch check_conf() of
-	{ok, ConfData} ->
-	    %% Actually, we don't need this info in an ets table anymore.
-	    %% This table was introduced because starting applications
-	    %% should be able to get som info from AC (e.g. loaded_apps).
-	    %% The new implementation makes sure the AC process can be
-	    %% called during start-up of any app.
-	    case check_conf_data(ConfData) of
-		ok ->
-		    ets:new(?ac_tab, [set, public, named_table]),
+        {ok, ConfData} ->
+            %% Actually, we don't need this info in an ets table anymore.
+            %% This table was introduced because starting applications
+            %% should be able to get som info from AC (e.g. loaded_apps).
+            %% The new implementation makes sure the AC process can be
+            %% called during start-up of any app.
+            case check_conf_data(ConfData) of
+                ok ->
+                    ets:new(?ac_tab, [set, public, named_table]),
                     %% Init ! {ack, self(), ok},
                     %% gen_server:enter_loop(?MODULE, [], S, {local, ?AC});
                     S = #state{conf_data = ConfData},
@@ -529,16 +529,16 @@ init(Init, Kernel) ->
                             gen_server:enter_loop(?MODULE, [], NewS,
                                                   {local, ?AC})
                     end;
-		{error, ErrorStr} ->
-		    Str = lists:flatten(io_lib:format("invalid config data: ~s", [ErrorStr])),
-		    Init ! {ack, self(), {error, to_string(Str)}}
-	    end;
-	{error, {File, Line, Str}} ->
-	    ReasonStr =
-		lists:flatten(io_lib:format("error in config file "
-					    "~p (~w): ~s",
-					    [File, Line, Str])),
-	    Init ! {ack, self(), {error, to_string(ReasonStr)}}
+                {error, ErrorStr} ->
+                    Str = lists:flatten(io_lib:format("invalid config data: ~s", [ErrorStr])),
+                    Init ! {ack, self(), {error, to_string(Str)}}
+            end;
+        {error, {File, Line, Str}} ->
+            ReasonStr =
+                lists:flatten(io_lib:format("error in config file "
+                                            "~p (~w): ~s",
+                                            [File, Line, Str])),
+            Init ! {ack, self(), {error, to_string(ReasonStr)}}
     end.
 
 
@@ -550,60 +550,60 @@ check_conf_data([]) ->
 check_conf_data(ConfData) when is_list(ConfData) ->
     [Application | ConfDataRem] = ConfData,
     case Application of
-	{kernel, List} when is_list(List) ->
-	    case check_para_kernel(List) of
-		ok ->
-		    check_conf_data(ConfDataRem);
-		Error1 ->
-		    Error1
-	    end;
-	{AppName, List} when is_atom(AppName), is_list(List) ->
-	    case check_para(List, atom_to_list(AppName)) of
-		ok ->
-		    check_conf_data(ConfDataRem);
-		Error2 ->
-		    Error2
-	    end;
-	{AppName, List} when is_list(List)  ->
-	    ErrMsg = "application: "
-		++ lists:flatten(io_lib:format("~p",[AppName]))
-		++ "; application name must be an atom",
-	    {error, ErrMsg};
-	{AppName, _List} ->
-	    ErrMsg = "application: "
-		++ lists:flatten(io_lib:format("~p",[AppName]))
-		++ "; parameters must be a list",
-	    {error, ErrMsg};
-	Else ->
-	    ErrMsg = "invalid application name: " ++ 
-		lists:flatten(io_lib:format(" ~p",[Else])),
-	    {error, ErrMsg}
+        {kernel, List} when is_list(List) ->
+            case check_para_kernel(List) of
+                ok ->
+                    check_conf_data(ConfDataRem);
+                Error1 ->
+                    Error1
+            end;
+        {AppName, List} when is_atom(AppName), is_list(List) ->
+            case check_para(List, atom_to_list(AppName)) of
+                ok ->
+                    check_conf_data(ConfDataRem);
+                Error2 ->
+                    Error2
+            end;
+        {AppName, List} when is_list(List)  ->
+            ErrMsg = "application: "
+                ++ lists:flatten(io_lib:format("~p",[AppName]))
+                ++ "; application name must be an atom",
+            {error, ErrMsg};
+        {AppName, _List} ->
+            ErrMsg = "application: "
+                ++ lists:flatten(io_lib:format("~p",[AppName]))
+                ++ "; parameters must be a list",
+            {error, ErrMsg};
+        Else ->
+            ErrMsg = "invalid application name: " ++
+                lists:flatten(io_lib:format(" ~p",[Else])),
+            {error, ErrMsg}
     end;
 check_conf_data(_ConfData) ->
     {error, 'configuration must be a list ended by <dot><whitespace>'}.
-    
+
 
 %% Special check of distributed parameter for kernel
 check_para_kernel([]) ->
     ok;
 check_para_kernel([{distributed, Apps} | ParaList]) when is_list(Apps) ->
     case check_distributed(Apps) of
-	{error, _ErrorMsg} = Error ->
-	    Error;
-	_ ->
-	    check_para_kernel(ParaList)
+        {error, _ErrorMsg} = Error ->
+            Error;
+        _ ->
+            check_para_kernel(ParaList)
     end;
 check_para_kernel([{distributed, _Apps} | _ParaList]) ->
     {error, "application: kernel; erroneous parameter: distributed"};
 check_para_kernel([{Para, _Val} | ParaList]) when is_atom(Para) ->
     check_para_kernel(ParaList);
 check_para_kernel([{Para, _Val} | _ParaList]) ->
-    {error, "application: kernel; invalid parameter: " ++ 
+    {error, "application: kernel; invalid parameter: " ++
      lists:flatten(io_lib:format("~p",[Para]))};
 check_para_kernel(Else) ->
-    {error, "application: kernel; invalid parameter list: " ++ 
+    {error, "application: kernel; invalid parameter list: " ++
      lists:flatten(io_lib:format("~p",[Else]))}.
-    
+
 
 check_distributed([]) ->
     ok;
@@ -622,17 +622,17 @@ check_para([], _AppName) ->
 check_para([{Para, _Val} | ParaList], AppName) when is_atom(Para) ->
     check_para(ParaList, AppName);
 check_para([{Para, _Val} | _ParaList], AppName) ->
-    {error, "application: " ++ AppName ++ "; invalid parameter: " ++ 
+    {error, "application: " ++ AppName ++ "; invalid parameter: " ++
      lists:flatten(io_lib:format("~p",[Para]))};
 check_para([Else | _ParaList], AppName) ->
-    {error, "application: " ++ AppName ++ "; invalid parameter: " ++ 
+    {error, "application: " ++ AppName ++ "; invalid parameter: " ++
      lists:flatten(io_lib:format("~p",[Else]))}.
 
 
 -type calls() :: 'info' | 'prep_config_change' | 'which_applications'
                | {'config_change' | 'control_application' |
-		  'load_application' | 'start_type' | 'stop_application' |
-		  'unload_application', term()}
+                  'load_application' | 'start_type' | 'stop_application' |
+                  'unload_application', term()}
                | {'change_application_data', _, _}
                | {'permit_application', atom() | {'application',atom(),_},_}
                | {'start_application', _, _}
@@ -644,77 +644,77 @@ check_para([Else | _ParaList], AppName) ->
 
 handle_call({load_application, Application}, From, S) ->
     case catch do_load_application(Application, S) of
-	{ok, NewS} ->
-	    AppName = get_appl_name(Application),
-	    case cntrl(AppName, S, {ac_load_application_req, AppName}) of
-		true ->
-		    {noreply, S#state{loading = [{AppName, From} |
-						 S#state.loading]}};
-		false ->
-		    {reply, ok, NewS}
-	    end;
-	{error, _} = Error ->
-	    {reply, Error, S};
-	{'EXIT', R} ->
-	    {reply, {error, R}, S}
+        {ok, NewS} ->
+            AppName = get_appl_name(Application),
+            case cntrl(AppName, S, {ac_load_application_req, AppName}) of
+                true ->
+                    {noreply, S#state{loading = [{AppName, From} |
+                                                 S#state.loading]}};
+                false ->
+                    {reply, ok, NewS}
+            end;
+        {error, _} = Error ->
+            {reply, Error, S};
+        {'EXIT', R} ->
+            {reply, {error, R}, S}
     end;
 
 handle_call({unload_application, AppName}, _From, S) ->
     case lists:keymember(AppName, 1, S#state.running) of
-	true -> {reply, {error, {running, AppName}}, S};
-	false ->
-	    case get_loaded(AppName) of
-		{true, _} ->
-		    NewS = unload(AppName, S),
-		    cntrl(AppName, S, {ac_application_unloaded, AppName}),
-		    {reply, ok, NewS};
-		false ->
-		    {reply, {error, {not_loaded, AppName}}, S}
-	    end
+        true -> {reply, {error, {running, AppName}}, S};
+        false ->
+            case get_loaded(AppName) of
+                {true, _} ->
+                    NewS = unload(AppName, S),
+                    cntrl(AppName, S, {ac_application_unloaded, AppName}),
+                    {reply, ok, NewS};
+                false ->
+                    {reply, {error, {not_loaded, AppName}}, S}
+            end
     end;
 
 handle_call({start_application, AppName, RestartType}, From, S) ->
-    #state{running = Running, starting = Starting, start_p_false = SPF, 
-	   started = Started, start_req = Start_req} = S,
+    #state{running = Running, starting = Starting, start_p_false = SPF,
+           started = Started, start_req = Start_req} = S,
     %% Check if the commandline environment variables are OK.
     %% Incase of erroneous variables do not start the application,
     %% if the application is permanent crash the node.
     %% Check if the application is already starting.
     case lists:keyfind(AppName, 1, Start_req) of
-	false ->
-	    case catch check_start_cond(AppName, RestartType, Started, Running) of
-		{ok, Appl} ->
-		    Cntrl = cntrl(AppName, S, {ac_start_application_req, AppName}),
-		    Perm = application:get_env(kernel, permissions),
-		    case {Cntrl, Perm} of
-			{true, _} ->
-			    {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
-							  Starting],
-					      start_req = [{AppName, From} | Start_req]}};
-			{false, undefined} ->
-			    spawn_starter(From, Appl, S, normal),
-			    {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
-							  Starting],
-					      start_req = [{AppName, From} | Start_req]}};
-			{false, {ok, Perms}} ->
-			    case lists:member({AppName, false}, Perms) of
-				false ->
-				    spawn_starter(From, Appl, S, normal),
-				    {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
-								  Starting],
-						      start_req = [{AppName, From} | Start_req]}};
-				true ->
-				    SS = S#state{start_p_false = [{AppName, RestartType, normal, From} |
-								  SPF]},
-				    {reply, ok, SS}
-			    end
-		    end;
-		{error, _R} = Error ->
-		    {reply, Error, S}
-	    end;
-	{AppName, _FromX} ->
-	    SS = S#state{start_req = [{AppName, From} | Start_req]},
-	    {noreply, SS}
+        false ->
+            case catch check_start_cond(AppName, RestartType, Started, Running) of
+                {ok, Appl} ->
+                    Cntrl = cntrl(AppName, S, {ac_start_application_req, AppName}),
+                    Perm = application:get_env(kernel, permissions),
+                    case {Cntrl, Perm} of
+                        {true, _} ->
+                            {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
+                                                          Starting],
+                                              start_req = [{AppName, From} | Start_req]}};
+                        {false, undefined} ->
+                            spawn_starter(From, Appl, S, normal),
+                            {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
+                                                          Starting],
+                                              start_req = [{AppName, From} | Start_req]}};
+                        {false, {ok, Perms}} ->
+                            case lists:member({AppName, false}, Perms) of
+                                false ->
+                                    spawn_starter(From, Appl, S, normal),
+                                    {noreply, S#state{starting = [{AppName, RestartType, normal, From} |
+                                                                  Starting],
+                                                      start_req = [{AppName, From} | Start_req]}};
+                                true ->
+                                    SS = S#state{start_p_false = [{AppName, RestartType, normal, From} |
+                                                                  SPF]},
+                                    {reply, ok, SS}
+                            end
+                    end;
+                {error, _R} = Error ->
+                    {reply, Error, S}
+            end;
+        {AppName, _FromX} ->
+            SS = S#state{start_req = [{AppName, From} | Start_req]},
+            {noreply, SS}
     end;
 
 handle_call({permit_application, AppName, Bool}, From, S) ->
@@ -731,135 +731,135 @@ handle_call({permit_application, AppName, Bool}, From, S) ->
     IsRunning = lists:keysearch(AppName, 1, Running),
 
     case lists:keymember(AppName, 1, Control) of
-	%%========================
-	%% distributed application
-	%%========================
-	true ->
-	    case {IsLoaded, IsStarting, IsStarted} of
-		%% not loaded
-		{false, _, _} ->
-		    {reply, {error, {not_loaded, AppName}}, S};
-		%% only loaded
-		{{true, _Appl}, false, false} ->
-		    update_permissions(AppName, Bool),
-		    {reply, {distributed_application, only_loaded}, S};
-		_ ->
-		    update_permissions(AppName, Bool),
-		    {reply, distributed_application, S}
-	    end;
-	%%========================
-	%% local application
-	%%========================
-	false ->
-	    case {Bool, IsLoaded, IsStarting, IsSPF, IsStarted, IsRunning} of
-		%%------------------------
-		%% permit the applicaition
-		%%------------------------
-		%% already running
-		{true, _, _, _, _, {value, _Tuple}} ->
-		    {reply, ok, S};
-		%% not loaded
-		{true, false, _, _, _, _} ->
-		    {reply, {error, {not_loaded, AppName}}, S};
-		%% only loaded
-		{true, {true, _Appl}, false, false, false, false} ->
-		    update_permissions(AppName, Bool),
-                    {reply, ok, S}; 
-		%% starting
-		{true, {true, _Appl}, {value, _Tuple}, false, false, false} ->
-		    update_permissions(AppName, Bool),
+        %%========================
+        %% distributed application
+        %%========================
+        true ->
+            case {IsLoaded, IsStarting, IsStarted} of
+                %% not loaded
+                {false, _, _} ->
+                    {reply, {error, {not_loaded, AppName}}, S};
+                %% only loaded
+                {{true, _Appl}, false, false} ->
+                    update_permissions(AppName, Bool),
+                    {reply, {distributed_application, only_loaded}, S};
+                _ ->
+                    update_permissions(AppName, Bool),
+                    {reply, distributed_application, S}
+            end;
+        %%========================
+        %% local application
+        %%========================
+        false ->
+            case {Bool, IsLoaded, IsStarting, IsSPF, IsStarted, IsRunning} of
+                %%------------------------
+                %% permit the applicaition
+                %%------------------------
+                %% already running
+                {true, _, _, _, _, {value, _Tuple}} ->
+                    {reply, ok, S};
+                %% not loaded
+                {true, false, _, _, _, _} ->
+                    {reply, {error, {not_loaded, AppName}}, S};
+                %% only loaded
+                {true, {true, _Appl}, false, false, false, false} ->
+                    update_permissions(AppName, Bool),
+                    {reply, ok, S};
+                %% starting
+                {true, {true, _Appl}, {value, _Tuple}, false, false, false} ->
+                    update_permissions(AppName, Bool),
                     {reply, ok, S}; %% check the permission after then app is started
-		%% start requested but not started because permit was false
-		{true, {true, Appl}, false, {value, Tuple}, false, false} ->
-		    update_permissions(AppName, Bool),
-		    {_AppName2, RestartType, normal, _From} = Tuple,
-		    spawn_starter(From, Appl, S, normal),
-		    SS = S#state{starting = [{AppName, RestartType, normal, From} | Starting], 
-				 start_p_false = keydelete(AppName, 1, SPF),
-				 start_req = [{AppName, From} | Start_req]},
-		    {noreply, SS};
-		%% started but not running
-		{true, {true, Appl}, _, _, {value, {AppName, RestartType}}, false} ->
-		    update_permissions(AppName, Bool),
-		    spawn_starter(From, Appl, S, normal),
-		    SS = S#state{starting = [{AppName, RestartType, normal, From} | Starting], 
-				 started = keydelete(AppName, 1, Started),
-				 start_req = [{AppName, From} | Start_req]},
-		    {noreply, SS};
+                %% start requested but not started because permit was false
+                {true, {true, Appl}, false, {value, Tuple}, false, false} ->
+                    update_permissions(AppName, Bool),
+                    {_AppName2, RestartType, normal, _From} = Tuple,
+                    spawn_starter(From, Appl, S, normal),
+                    SS = S#state{starting = [{AppName, RestartType, normal, From} | Starting],
+                                 start_p_false = keydelete(AppName, 1, SPF),
+                                 start_req = [{AppName, From} | Start_req]},
+                    {noreply, SS};
+                %% started but not running
+                {true, {true, Appl}, _, _, {value, {AppName, RestartType}}, false} ->
+                    update_permissions(AppName, Bool),
+                    spawn_starter(From, Appl, S, normal),
+                    SS = S#state{starting = [{AppName, RestartType, normal, From} | Starting],
+                                 started = keydelete(AppName, 1, Started),
+                                 start_req = [{AppName, From} | Start_req]},
+                    {noreply, SS};
 
-		%%==========================
-		%% unpermit the application
-		%%==========================
-		%% running
-		{false, _, _, _,  _, {value, {_AppName, Id}}} ->
-		    {_AppName2, Type} = lists:keyfind(AppName, 1, Started),
-		    stop_appl(AppName, Id, Type),
-		    NRunning = keydelete(AppName, 1, Running),
-		    {reply, ok, S#state{running = NRunning}};
-		%% not loaded
-		{false, false, _, _, _,  _} ->
-		    {reply, {error, {not_loaded, AppName}}, S};
-		%% only loaded
-		{false, {true, _Appl}, false, false, false, false} ->
-		    update_permissions(AppName, Bool),
-                    {reply, ok, S}; 
-		%% starting
-		{false, {true, _Appl}, {value, _Tuple}, false, false, false} ->
-		    update_permissions(AppName, Bool),
-		    {reply, ok, S};
-		%% start requested but not started because permit was false
-		{false, {true, _Appl}, false, {value, _Tuple}, false, false} ->
-		    update_permissions(AppName, Bool),
-		    SS = S#state{start_p_false = keydelete(AppName, 1, SPF)},
-		    {reply, ok, SS};
-		%% started but not running
-		{false, {true, _Appl}, _,  _, {value, _Tuple}, false} ->
-		    update_permissions(AppName, Bool),
-		    {reply, ok, S}
+                %%==========================
+                %% unpermit the application
+                %%==========================
+                %% running
+                {false, _, _, _,  _, {value, {_AppName, Id}}} ->
+                    {_AppName2, Type} = lists:keyfind(AppName, 1, Started),
+                    stop_appl(AppName, Id, Type),
+                    NRunning = keydelete(AppName, 1, Running),
+                    {reply, ok, S#state{running = NRunning}};
+                %% not loaded
+                {false, false, _, _, _,  _} ->
+                    {reply, {error, {not_loaded, AppName}}, S};
+                %% only loaded
+                {false, {true, _Appl}, false, false, false, false} ->
+                    update_permissions(AppName, Bool),
+                    {reply, ok, S};
+                %% starting
+                {false, {true, _Appl}, {value, _Tuple}, false, false, false} ->
+                    update_permissions(AppName, Bool),
+                    {reply, ok, S};
+                %% start requested but not started because permit was false
+                {false, {true, _Appl}, false, {value, _Tuple}, false, false} ->
+                    update_permissions(AppName, Bool),
+                    SS = S#state{start_p_false = keydelete(AppName, 1, SPF)},
+                    {reply, ok, SS};
+                %% started but not running
+                {false, {true, _Appl}, _,  _, {value, _Tuple}, false} ->
+                    update_permissions(AppName, Bool),
+                    {reply, ok, S}
 
-	    end
+            end
     end;
 
 handle_call({stop_application, AppName}, _From, S) ->
     #state{running = Running, started = Started} = S,
     case lists:keyfind(AppName, 1, Running) of
-	{_AppName, Id} ->
-	    {_AppName2, Type} = lists:keyfind(AppName, 1, Started),
-	    stop_appl(AppName, Id, Type),
-	    NRunning = keydelete(AppName, 1, Running),
-	    NStarted = keydelete(AppName, 1, Started),
-	    cntrl(AppName, S, {ac_application_stopped, AppName}),
-	    {reply, ok, S#state{running = NRunning, started = NStarted}};
-	false ->
-	    case lists:keymember(AppName, 1, Started) of
-		true ->
-		    NStarted = keydelete(AppName, 1, Started),
-		    cntrl(AppName, S, {ac_application_stopped, AppName}),
-		    {reply, ok, S#state{started = NStarted}};
-		false ->
-		    {reply, {error, {not_started, AppName}}, S}
-	    end
+        {_AppName, Id} ->
+            {_AppName2, Type} = lists:keyfind(AppName, 1, Started),
+            stop_appl(AppName, Id, Type),
+            NRunning = keydelete(AppName, 1, Running),
+            NStarted = keydelete(AppName, 1, Started),
+            cntrl(AppName, S, {ac_application_stopped, AppName}),
+            {reply, ok, S#state{running = NRunning, started = NStarted}};
+        false ->
+            case lists:keymember(AppName, 1, Started) of
+                true ->
+                    NStarted = keydelete(AppName, 1, Started),
+                    cntrl(AppName, S, {ac_application_stopped, AppName}),
+                    {reply, ok, S#state{started = NStarted}};
+                false ->
+                    {reply, {error, {not_started, AppName}}, S}
+            end
     end;
 
 handle_call({change_application_data, Applications, Config}, _From, S) ->
     OldAppls = ets:filter(?ac_tab,
-			  fun([{{loaded, _AppName}, Appl}]) ->
-				  {true, Appl};
-			     (_) ->
-				  false
-			  end,
-			  []),
+                          fun([{{loaded, _AppName}, Appl}]) ->
+                                  {true, Appl};
+                             (_) ->
+                                  false
+                          end,
+                          []),
     case catch do_change_apps(Applications, Config, OldAppls) of
-	{error, _} = Error ->
-	    {reply, Error, S};
-	{'EXIT', R} ->
-	    {reply, {error, R}, S};
-	NewAppls ->
-	    lists:foreach(fun(Appl) ->
-				  ets:insert(?ac_tab, {{loaded, Appl#appl.name},
-						      Appl})
-			  end, NewAppls),
-	    {reply, ok, S#state{conf_data = Config}}
+        {error, _} = Error ->
+            {reply, Error, S};
+        {'EXIT', R} ->
+            {reply, {error, R}, S};
+        NewAppls ->
+            lists:foreach(fun(Appl) ->
+                                  ets:insert(?ac_tab, {{loaded, Appl#appl.name},
+                                                      Appl})
+                          end, NewAppls),
+            {reply, ok, S#state{conf_data = Config}}
     end;
 
 handle_call(prep_config_change, _From, S) ->
@@ -874,15 +874,15 @@ handle_call({config_change, EnvBefore}, _From, S) ->
 
 handle_call(which_applications, _From, S) ->
     Reply = zf(fun({Name, Id}) ->
-		       case Id of
-			   {distributed, _Node} ->
-			       false;
-			   _ ->
-			       {true, #appl{descr = Descr, vsn = Vsn}} =
-				   get_loaded(Name),
-			       {true, {Name, Descr, Vsn}}
-		       end
-	       end, S#state.running),
+                       case Id of
+                           {distributed, _Node} ->
+                               false;
+                           _ ->
+                               {true, #appl{descr = Descr, vsn = Vsn}} =
+                                   get_loaded(Name),
+                               {true, {Name, Descr, Vsn}}
+                       end
+               end, S#state.running),
     {reply, Reply, S};
 
 handle_call({set_env, AppName, Key, Val}, _From, S) ->
@@ -896,30 +896,30 @@ handle_call({unset_env, AppName, Key}, _From, S) ->
 handle_call({control_application, AppName}, {Pid, _Tag}, S) ->
     Control = S#state.control,
     case lists:keymember(AppName, 1, Control) of
-	false ->
-	    link(Pid),
-	    {reply, true, S#state{control = [{AppName, Pid} | Control]}};
-	true ->
-	    {reply, false, S}
+        false ->
+            link(Pid),
+            {reply, true, S#state{control = [{AppName, Pid} | Control]}};
+        true ->
+            {reply, false, S}
     end;
 
 handle_call({start_type, AppName}, _From, S) ->
     Starting = S#state.starting,
     StartType = case lists:keyfind(AppName, 1, Starting) of
-		    false ->
-			local;
-		    {_AppName, _RestartType, Type, _F} ->
-			Type
-		end,
+                    false ->
+                        local;
+                    {_AppName, _RestartType, Type, _F} ->
+                        Type
+                end,
     {reply, StartType, S};
 
 handle_call(info, _From, S) ->
     Reply = [{loaded, loaded_applications()},
-	     {loading, S#state.loading},
-	     {started, S#state.started},
-	     {start_p_false, S#state.start_p_false},
-	     {running, S#state.running},
-	     {starting, S#state.starting}],
+             {loading, S#state.loading},
+             {started, S#state.started},
+             {start_p_false, S#state.start_p_false},
+             {running, S#state.running},
+             {starting, S#state.starting}],
     {reply, Reply, S}.
 
 -spec handle_cast({'application_started', appname(), _}, state()) ->
@@ -929,87 +929,87 @@ handle_cast({application_started, AppName, Res}, S) ->
     handle_application_started(AppName, Res, S).
 
 handle_application_started(AppName, Res, S) ->
-    #state{starting = Starting, running = Running, started = Started, 
-	   start_req = Start_req} = S,
+    #state{starting = Starting, running = Running, started = Started,
+           start_req = Start_req} = S,
     Start_reqN = reply_to_requester(AppName, Start_req, Res),
     {_AppName, RestartType, _Type, _From} = lists:keyfind(AppName, 1, Starting),
     case Res of
-	{ok, Id} ->
-	    case AppName of
-		kernel -> check_user();
-		_ -> ok
-	    end,
-	    info_started(AppName, nd(Id)),
-	    notify_cntrl_started(AppName, Id, S, ok),
-	    NRunning = keyreplaceadd(AppName, 1, Running,{AppName,Id}),
-	    NStarted = keyreplaceadd(AppName, 1, Started,{AppName,RestartType}),
-	    NewS =  S#state{starting = keydelete(AppName, 1, Starting),
-			    running = NRunning,
-			    started = NStarted,
-			    start_req = Start_reqN},
-	    %% The permission may have been changed during start
-	    Perm = application:get_env(kernel, permissions),
-	    case {Perm, Id} of
-		{undefined, _} ->
-		    {noreply, NewS};
-		%% Check only if the application is started on the own node
-		{{ok, Perms}, {distributed, StartNode}} when StartNode =:= node() ->
-		    case lists:member({AppName, false}, Perms) of
-			true ->
-			    #state{running = StopRunning, started = StopStarted} = NewS,
-			    case lists:keyfind(AppName, 1, StopRunning) of
-				{_AppName, Id} ->
-				    {_AppName2, Type} =
-					lists:keyfind(AppName, 1, StopStarted),
-				    stop_appl(AppName, Id, Type),
-				    NStopRunning = keydelete(AppName, 1, StopRunning),
-				    cntrl(AppName, NewS, {ac_application_stopped, AppName}),
-				    {noreply, NewS#state{running = NStopRunning, 
-							started = StopStarted}};
-				false ->
-				    {noreply, NewS}
-			    end;
-			false ->
-			    {noreply, NewS}
-		    end;
-		_ ->
-		    {noreply, NewS}
-	    end;
-	{error, R} = Error when RestartType =:= temporary ->
-	    notify_cntrl_started(AppName, undefined, S, Error),
-	    info_exited(AppName, R, RestartType),
-	    {noreply, S#state{starting = keydelete(AppName, 1, Starting),
-			      start_req = Start_reqN}};
-	{info, R} when RestartType =:= temporary ->
-	    notify_cntrl_started(AppName, undefined, S, {error, R}),
-	    {noreply, S#state{starting = keydelete(AppName, 1, Starting),
-			      start_req = Start_reqN}};
-	{ErrInf, R} when RestartType =:= transient, ErrInf =:= error;
-			 RestartType =:= transient, ErrInf =:= info ->
-	    notify_cntrl_started(AppName, undefined, S, {error, R}),
-	    case ErrInf of
-		error ->
-		    info_exited(AppName, R, RestartType);
-		info ->
-		    ok
-	    end,
-	    case R of
-		{{'EXIT',normal},_Call} ->
-		    {noreply, S#state{starting = keydelete(AppName, 1, Starting),
-				      start_req = Start_reqN}};
-		_ ->
-		    Reason = {application_start_failure, AppName, R},
-		    {stop, to_string(Reason), S}
-	    end;
-	{error, R} = Error -> %% permanent
-	    notify_cntrl_started(AppName, undefined, S, Error),
-	    info_exited(AppName, R, RestartType),
-	    Reason = {application_start_failure, AppName, R},
-	    {stop, to_string(Reason), S};
-	{info, R} -> %% permanent
-	    notify_cntrl_started(AppName, undefined, S, {error, R}),
-	    Reason = {application_start_failure, AppName, R},
-	    {stop, to_string(Reason), S}
+        {ok, Id} ->
+            case AppName of
+                kernel -> check_user();
+                _ -> ok
+            end,
+            info_started(AppName, nd(Id)),
+            notify_cntrl_started(AppName, Id, S, ok),
+            NRunning = keyreplaceadd(AppName, 1, Running,{AppName,Id}),
+            NStarted = keyreplaceadd(AppName, 1, Started,{AppName,RestartType}),
+            NewS =  S#state{starting = keydelete(AppName, 1, Starting),
+                            running = NRunning,
+                            started = NStarted,
+                            start_req = Start_reqN},
+            %% The permission may have been changed during start
+            Perm = application:get_env(kernel, permissions),
+            case {Perm, Id} of
+                {undefined, _} ->
+                    {noreply, NewS};
+                %% Check only if the application is started on the own node
+                {{ok, Perms}, {distributed, StartNode}} when StartNode =:= node() ->
+                    case lists:member({AppName, false}, Perms) of
+                        true ->
+                            #state{running = StopRunning, started = StopStarted} = NewS,
+                            case lists:keyfind(AppName, 1, StopRunning) of
+                                {_AppName, Id} ->
+                                    {_AppName2, Type} =
+                                        lists:keyfind(AppName, 1, StopStarted),
+                                    stop_appl(AppName, Id, Type),
+                                    NStopRunning = keydelete(AppName, 1, StopRunning),
+                                    cntrl(AppName, NewS, {ac_application_stopped, AppName}),
+                                    {noreply, NewS#state{running = NStopRunning,
+                                                        started = StopStarted}};
+                                false ->
+                                    {noreply, NewS}
+                            end;
+                        false ->
+                            {noreply, NewS}
+                    end;
+                _ ->
+                    {noreply, NewS}
+            end;
+        {error, R} = Error when RestartType =:= temporary ->
+            notify_cntrl_started(AppName, undefined, S, Error),
+            info_exited(AppName, R, RestartType),
+            {noreply, S#state{starting = keydelete(AppName, 1, Starting),
+                              start_req = Start_reqN}};
+        {info, R} when RestartType =:= temporary ->
+            notify_cntrl_started(AppName, undefined, S, {error, R}),
+            {noreply, S#state{starting = keydelete(AppName, 1, Starting),
+                              start_req = Start_reqN}};
+        {ErrInf, R} when RestartType =:= transient, ErrInf =:= error;
+                         RestartType =:= transient, ErrInf =:= info ->
+            notify_cntrl_started(AppName, undefined, S, {error, R}),
+            case ErrInf of
+                error ->
+                    info_exited(AppName, R, RestartType);
+                info ->
+                    ok
+            end,
+            case R of
+                {{'EXIT',normal},_Call} ->
+                    {noreply, S#state{starting = keydelete(AppName, 1, Starting),
+                                      start_req = Start_reqN}};
+                _ ->
+                    Reason = {application_start_failure, AppName, R},
+                    {stop, to_string(Reason), S}
+            end;
+        {error, R} = Error -> %% permanent
+            notify_cntrl_started(AppName, undefined, S, Error),
+            info_exited(AppName, R, RestartType),
+            Reason = {application_start_failure, AppName, R},
+            {stop, to_string(Reason), S};
+        {info, R} -> %% permanent
+            notify_cntrl_started(AppName, undefined, S, {error, R}),
+            Reason = {application_start_failure, AppName, R},
+            {stop, to_string(Reason), S}
     end.
 
 -spec handle_info(term(), state()) ->
@@ -1017,57 +1017,57 @@ handle_application_started(AppName, Res, S) ->
 
 handle_info({ac_load_application_reply, AppName, Res}, S) ->
     case keysearchdelete(AppName, 1, S#state.loading) of
-	{value, {_AppName, From}, Loading} ->
-	    gen_server:reply(From, Res),
-	    case Res of
-		ok ->
-		    {noreply, S#state{loading = Loading}};
-		{error, _R} ->
-		    NewS = unload(AppName, S),
-		    {noreply, NewS#state{loading = Loading}}
-	    end;
-	false ->
-	    {noreply, S}
+        {value, {_AppName, From}, Loading} ->
+            gen_server:reply(From, Res),
+            case Res of
+                ok ->
+                    {noreply, S#state{loading = Loading}};
+                {error, _R} ->
+                    NewS = unload(AppName, S),
+                    {noreply, NewS#state{loading = Loading}}
+            end;
+        false ->
+            {noreply, S}
     end;
 
 handle_info({ac_start_application_reply, AppName, Res}, S) ->
     Start_req = S#state.start_req,
     case lists:keyfind(AppName, 1, Starting = S#state.starting) of
-	{_AppName, RestartType, Type, From} ->
-	    case Res of
-		start_it ->
-		    {true, Appl} = get_loaded(AppName),
-		    spawn_starter(From, Appl, S, Type),
-		    {noreply, S};
-		{started, Node} ->
-		    handle_application_started(AppName, 
-					       {ok, {distributed, Node}}, 
-					       S);
-		not_started ->
-		    Started = S#state.started,
-		    Start_reqN =
-			reply_to_requester(AppName, Start_req, ok),
-		    {noreply, 
-		     S#state{starting = keydelete(AppName, 1, Starting),
-			     started = [{AppName, RestartType} | Started],
-			     start_req = Start_reqN}};
-		{takeover, _Node} = Takeover ->
-		    {true, Appl} = get_loaded(AppName),
-		    spawn_starter(From, Appl, S, Takeover),
-		    NewStarting1 = keydelete(AppName, 1, Starting),
-		    NewStarting = [{AppName, RestartType, Takeover, From} | NewStarting1],
-		    {noreply, S#state{starting = NewStarting}};
-		{error, Reason} = Error when RestartType =:= permanent ->
-		    Start_reqN = reply_to_requester(AppName, Start_req, Error),
-		    {stop, to_string(Reason), S#state{start_req = Start_reqN}};
-		{error, _Reason} = Error ->
-		    Start_reqN = reply_to_requester(AppName, Start_req, Error),
-		    {noreply, S#state{starting =
-					  keydelete(AppName, 1, Starting),
-				      start_req = Start_reqN}}
-	    end;
-	false ->
-	    {noreply, S} % someone called stop before control got that
+        {_AppName, RestartType, Type, From} ->
+            case Res of
+                start_it ->
+                    {true, Appl} = get_loaded(AppName),
+                    spawn_starter(From, Appl, S, Type),
+                    {noreply, S};
+                {started, Node} ->
+                    handle_application_started(AppName,
+                                               {ok, {distributed, Node}},
+                                               S);
+                not_started ->
+                    Started = S#state.started,
+                    Start_reqN =
+                        reply_to_requester(AppName, Start_req, ok),
+                    {noreply,
+                     S#state{starting = keydelete(AppName, 1, Starting),
+                             started = [{AppName, RestartType} | Started],
+                             start_req = Start_reqN}};
+                {takeover, _Node} = Takeover ->
+                    {true, Appl} = get_loaded(AppName),
+                    spawn_starter(From, Appl, S, Takeover),
+                    NewStarting1 = keydelete(AppName, 1, Starting),
+                    NewStarting = [{AppName, RestartType, Takeover, From} | NewStarting1],
+                    {noreply, S#state{starting = NewStarting}};
+                {error, Reason} = Error when RestartType =:= permanent ->
+                    Start_reqN = reply_to_requester(AppName, Start_req, Error),
+                    {stop, to_string(Reason), S#state{start_req = Start_reqN}};
+                {error, _Reason} = Error ->
+                    Start_reqN = reply_to_requester(AppName, Start_req, Error),
+                    {noreply, S#state{starting =
+                                          keydelete(AppName, 1, Starting),
+                                      start_req = Start_reqN}}
+            end;
+        false ->
+            {noreply, S} % someone called stop before control got that
     end;
 
 handle_info({ac_change_application_req, AppName, Msg}, S) ->
@@ -1075,89 +1075,89 @@ handle_info({ac_change_application_req, AppName, Msg}, S) ->
     Started = S#state.started,
     Starting = S#state.starting,
     case {keyfind(AppName, 1, Running), keyfind(AppName, 1, Started)} of
-	{{AppName, Id}, {_AppName2, Type}} ->
-	    case Msg of
-		{started, Node} ->
-		    stop_appl(AppName, Id, Type),
-		    NRunning = [{AppName, {distributed, Node}} |
-				keydelete(AppName, 1, Running)],
-		    {noreply, S#state{running = NRunning}};
-		{takeover, _Node, _RT} when is_pid(Id) -> % it is running already
-		    notify_cntrl_started(AppName, Id, S, ok),
-		    {noreply, S};
-		{takeover, Node, RT} ->
-		    NewS = do_start(AppName, RT, {takeover, Node}, undefined, S),
-		    {noreply, NewS};
-		{failover, _Node, _RT} when is_pid(Id) -> % it is running already
-		    notify_cntrl_started(AppName, Id, S, ok),
-		    {noreply, S};
-		{failover, Node, RT} ->
-		    case application:get_key(AppName, start_phases) of
-			{ok, undefined} ->
-			    %% to be backwards compatible the application
-			    %% is not started as failover if start_phases  
-			    %% is not defined in the .app file
-			    NewS = do_start(AppName, RT, normal, undefined, S),
-			    {noreply, NewS};
-			{ok, _StartPhases} ->
-			    NewS = do_start(AppName, RT, {failover, Node}, undefined, S),
-			    {noreply, NewS}
-		    end;
-		stop_it ->
-		    stop_appl(AppName, Id, Type),
-		    cntrl(AppName, S, {ac_application_not_run, AppName}),
-		    NRunning = keyreplace(AppName, 1, Running, 
-					 {AppName, {distributed, []}}),
-		    {noreply, S#state{running = NRunning}};
-		%% We should not try to start a running application!
-		start_it when is_pid(Id) ->
-		    notify_cntrl_started(AppName, Id, S, ok),
-		    {noreply, S};
-		start_it ->
-		    NewS = do_start(AppName, undefined, normal, undefined, S),
-		    {noreply, NewS};
-		not_running ->
-		    NRunning = keydelete(AppName, 1, Running),
-		    {noreply, S#state{running = NRunning}};
-		_ ->
-		    {noreply, S}
-	    end;
-	_ ->
-	    IsLoaded = get_loaded(AppName),
-	    IsStarting = lists:keysearch(AppName, 1, Starting),
-	    IsStarted = lists:keysearch(AppName, 1, Started),
-	    IsRunning = lists:keysearch(AppName, 1, Running),
+        {{AppName, Id}, {_AppName2, Type}} ->
+            case Msg of
+                {started, Node} ->
+                    stop_appl(AppName, Id, Type),
+                    NRunning = [{AppName, {distributed, Node}} |
+                                keydelete(AppName, 1, Running)],
+                    {noreply, S#state{running = NRunning}};
+                {takeover, _Node, _RT} when is_pid(Id) -> % it is running already
+                    notify_cntrl_started(AppName, Id, S, ok),
+                    {noreply, S};
+                {takeover, Node, RT} ->
+                    NewS = do_start(AppName, RT, {takeover, Node}, undefined, S),
+                    {noreply, NewS};
+                {failover, _Node, _RT} when is_pid(Id) -> % it is running already
+                    notify_cntrl_started(AppName, Id, S, ok),
+                    {noreply, S};
+                {failover, Node, RT} ->
+                    case application:get_key(AppName, start_phases) of
+                        {ok, undefined} ->
+                            %% to be backwards compatible the application
+                            %% is not started as failover if start_phases
+                            %% is not defined in the .app file
+                            NewS = do_start(AppName, RT, normal, undefined, S),
+                            {noreply, NewS};
+                        {ok, _StartPhases} ->
+                            NewS = do_start(AppName, RT, {failover, Node}, undefined, S),
+                            {noreply, NewS}
+                    end;
+                stop_it ->
+                    stop_appl(AppName, Id, Type),
+                    cntrl(AppName, S, {ac_application_not_run, AppName}),
+                    NRunning = keyreplace(AppName, 1, Running,
+                                         {AppName, {distributed, []}}),
+                    {noreply, S#state{running = NRunning}};
+                %% We should not try to start a running application!
+                start_it when is_pid(Id) ->
+                    notify_cntrl_started(AppName, Id, S, ok),
+                    {noreply, S};
+                start_it ->
+                    NewS = do_start(AppName, undefined, normal, undefined, S),
+                    {noreply, NewS};
+                not_running ->
+                    NRunning = keydelete(AppName, 1, Running),
+                    {noreply, S#state{running = NRunning}};
+                _ ->
+                    {noreply, S}
+            end;
+        _ ->
+            IsLoaded = get_loaded(AppName),
+            IsStarting = lists:keysearch(AppName, 1, Starting),
+            IsStarted = lists:keysearch(AppName, 1, Started),
+            IsRunning = lists:keysearch(AppName, 1, Running),
 
-	    case Msg of
-		start_it ->
-		    case {IsLoaded, IsStarting, IsStarted, IsRunning} of
-			%% already running
-			{_, _, _, {value, _Tuple}} ->
-			    {noreply, S};
-			%% not loaded
-			{false, _, _, _} ->
-			    {noreply, S};
-			%% only loaded
-			{{true, _Appl}, false, false, false} ->
-			    {noreply, S};
-			%% starting
-			{{true, _Appl}, {value, Tuple}, false, false} ->
-			    {_AppName, _RStype, _Type, From} = Tuple,
-			    NewS = do_start(AppName, undefined, normal, From, S),
-			    {noreply, NewS};
-			%% started but not running
-			{{true, _Appl}, _, {value, {AppName, _RestartType}}, false} ->
-			    NewS = do_start(AppName, undefined, normal, undefined, S),
-			    SS = NewS#state{started = keydelete(AppName, 1, Started)},
-			    {noreply, SS}
-		    end;
-		{started, Node} ->
-		    NRunning = [{AppName, {distributed, Node}} |
-				keydelete(AppName, 1, Running)],
-		    {noreply, S#state{running = NRunning}};
-		_ ->
-		    {noreply, S} % someone called stop before control got that
-	    end
+            case Msg of
+                start_it ->
+                    case {IsLoaded, IsStarting, IsStarted, IsRunning} of
+                        %% already running
+                        {_, _, _, {value, _Tuple}} ->
+                            {noreply, S};
+                        %% not loaded
+                        {false, _, _, _} ->
+                            {noreply, S};
+                        %% only loaded
+                        {{true, _Appl}, false, false, false} ->
+                            {noreply, S};
+                        %% starting
+                        {{true, _Appl}, {value, Tuple}, false, false} ->
+                            {_AppName, _RStype, _Type, From} = Tuple,
+                            NewS = do_start(AppName, undefined, normal, From, S),
+                            {noreply, NewS};
+                        %% started but not running
+                        {{true, _Appl}, _, {value, {AppName, _RestartType}}, false} ->
+                            NewS = do_start(AppName, undefined, normal, undefined, S),
+                            SS = NewS#state{started = keydelete(AppName, 1, Started)},
+                            {noreply, SS}
+                    end;
+                {started, Node} ->
+                    NRunning = [{AppName, {distributed, Node}} |
+                                keydelete(AppName, 1, Running)],
+                    {noreply, S#state{running = NRunning}};
+                _ ->
+                    {noreply, S} % someone called stop before control got that
+            end
     end;
 
 %%-----------------------------------------------------------------
@@ -1169,23 +1169,23 @@ handle_info({'EXIT', Pid, Reason}, S) ->
     NRunning = keydelete(Pid, 2, S#state.running),
     NewS = S#state{running = NRunning},
     case lists:keyfind(Pid, 2, S#state.running) of
-	{AppName, _AmPid} ->
-	    cntrl(AppName, S, {ac_application_stopped, AppName}),
-	    case lists:keyfind(AppName, 1, S#state.started) of
-		{_AppName, temporary} ->
-		    info_exited(AppName, Reason, temporary),
-		    {noreply, NewS};
-		{_AppName, transient} when Reason =:= normal ->
-		    info_exited(AppName, Reason, transient),
-		    {noreply, NewS};
-		{_AppName, Type} ->
-		    info_exited(AppName, Reason, Type),
-		    {stop, to_string({application_terminated, AppName, Reason}), NewS}
-	    end;
-	false ->
-	    {noreply, S#state{control = del_cntrl(S#state.control, Pid)}}
+        {AppName, _AmPid} ->
+            cntrl(AppName, S, {ac_application_stopped, AppName}),
+            case lists:keyfind(AppName, 1, S#state.started) of
+                {_AppName, temporary} ->
+                    info_exited(AppName, Reason, temporary),
+                    {noreply, NewS};
+                {_AppName, transient} when Reason =:= normal ->
+                    info_exited(AppName, Reason, transient),
+                    {noreply, NewS};
+                {_AppName, Type} ->
+                    info_exited(AppName, Reason, Type),
+                    {stop, to_string({application_terminated, AppName, Reason}), NewS}
+            end;
+        false ->
+            {noreply, S#state{control = del_cntrl(S#state.control, Pid)}}
     end;
-    
+
 handle_info(_, S) ->
     {noreply, S}.
 
@@ -1193,36 +1193,36 @@ handle_info(_, S) ->
 
 terminate(Reason, S) ->
     case application:get_env(kernel, shutdown_func) of
-	{ok, {M, F}} ->
-	    catch M:F(Reason);
-	_ ->
-	    ok
+        {ok, {M, F}} ->
+            catch M:F(Reason);
+        _ ->
+            ok
     end,
     ShutdownTimeout =
-	case application:get_env(kernel, shutdown_timeout) of
-	    undefined -> infinity;
-	    {ok,T} -> T
-	end,
-    foreach(fun({_AppName, Id}) when is_pid(Id) -> 
-		    Ref = erlang:monitor(process, Id),
-		    unlink(Id),
-		    exit(Id, shutdown),
-		    receive
-			%% Proc died before link
-			{'EXIT', Id, _} -> ok
-		    after 0 ->
-			    receive
-				{'DOWN', Ref, process, Id, _} -> ok
-			    after ShutdownTimeout ->
-				    exit(Id, kill),
-				    receive
-					{'DOWN', Ref, process, Id, _} -> ok
-				    end
-			    end
-		    end;
-	       (_) -> ok
-	    end,
-	    S#state.running),
+        case application:get_env(kernel, shutdown_timeout) of
+            undefined -> infinity;
+            {ok,T} -> T
+        end,
+    foreach(fun({_AppName, Id}) when is_pid(Id) ->
+                    Ref = erlang:monitor(process, Id),
+                    unlink(Id),
+                    exit(Id, shutdown),
+                    receive
+                        %% Proc died before link
+                        {'EXIT', Id, _} -> ok
+                    after 0 ->
+                            receive
+                                {'DOWN', Ref, process, Id, _} -> ok
+                            after ShutdownTimeout ->
+                                    exit(Id, kill),
+                                    receive
+                                        {'DOWN', Ref, process, Id, _} -> ok
+                                    end
+                            end
+                    end;
+               (_) -> ok
+            end,
+            S#state.running),
     true = ets:delete(?ac_tab),
     ok.
 
@@ -1237,18 +1237,18 @@ code_change(_OldVsn, State, _Extra) ->
 %%%-----------------------------------------------------------------
 cntrl(AppName, #state{control = Control}, Msg) ->
     case lists:keyfind(AppName, 1, Control) of
-	{_AppName, Pid} ->
-	    Pid ! Msg,
-	    true;
-	false -> 
-	    false
+        {_AppName, Pid} ->
+            Pid ! Msg,
+            true;
+        false ->
+            false
     end.
 
 notify_cntrl_started(_AppName, {distributed, _Node}, _S, _Res) ->
     ok;
 notify_cntrl_started(AppName, _Id, S, Res) ->
     cntrl(AppName, S, {ac_application_run, AppName, Res}).
-    
+
 del_cntrl([{_, Pid}|T], Pid) ->
     del_cntrl(T, Pid);
 del_cntrl([H|T], Pid) ->
@@ -1258,20 +1258,20 @@ del_cntrl([], _Pid) ->
 
 get_loaded(App) ->
     AppName = get_appl_name(App),
-    case ets:lookup(?ac_tab, {loaded, AppName}) of 
-	[{_Key, Appl}] -> {true, Appl};
-	_  -> false
+    case ets:lookup(?ac_tab, {loaded, AppName}) of
+        [{_Key, Appl}] -> {true, Appl};
+        _  -> false
     end.
-    
+
 do_load_application(Application, S) ->
     case get_loaded(Application) of
-	{true, _} ->
-	    throw({error, {already_loaded, Application}});
-	false ->
-	    case make_appl(Application) of
-		{ok, Appl} -> load(S, Appl);
-		Error -> Error
-	    end
+        {true, _} ->
+            throw({error, {already_loaded, Application}});
+        false ->
+            case make_appl(Application) of
+                {ok, Appl} -> load(S, Appl);
+                Error -> Error
+            end
     end.
 
 %% Recursively load the application and its included apps.
@@ -1283,22 +1283,22 @@ load(S, {ApplData, ApplEnv, IncApps, Descr, Id, Vsn, Apps}) ->
     CmdLineEnv = get_cmd_env(Name),
     NewEnv2 = merge_app_env(NewEnv, CmdLineEnv),
     NewEnv3 = keyreplaceadd(included_applications, 1, NewEnv2,
-			    {included_applications, IncApps}),
+                            {included_applications, IncApps}),
     add_env(Name, NewEnv3),
-    Appl = #appl{name = Name, descr = Descr, id = Id, vsn = Vsn, 
-		 appl_data = ApplData, inc_apps = IncApps, apps = Apps},
+    Appl = #appl{name = Name, descr = Descr, id = Id, vsn = Vsn,
+                 appl_data = ApplData, inc_apps = IncApps, apps = Apps},
     ets:insert(?ac_tab, {{loaded, Name}, Appl}),
     NewS =
-	foldl(fun(App, S1) ->
-		      case get_loaded(App) of
-			  {true, _} -> S1;
-			  false ->
-			      case do_load_application(App, S1) of
-				  {ok, S2} -> S2;
-				  Error -> throw(Error)
-			      end
-		      end
-	      end, S, IncApps),
+        foldl(fun(App, S1) ->
+                      case get_loaded(App) of
+                          {true, _} -> S1;
+                          false ->
+                              case do_load_application(App, S1) of
+                                  {ok, S2} -> S2;
+                                  Error -> throw(Error)
+                              end
+                      end
+              end, S, IncApps),
     {ok, NewS}.
 
 unload(AppName, S) ->
@@ -1306,11 +1306,11 @@ unload(AppName, S) ->
     del_env(AppName),
     ets:delete(?ac_tab, {loaded, AppName}),
     foldl(fun(App, S1) ->
-		  case get_loaded(App) of
-		      false -> S1;
-		      {true, _} -> unload(App, S1)
-		  end
-	  end, S, IncApps).
+                  case get_loaded(App) of
+                      false -> S1;
+                      {true, _} -> unload(App, S1)
+                  end
+          end, S, IncApps).
 
 %% pulse_otp, check both internal state AND the real application-manager!
 check_start_cond(AppName, RestartType, Started, Running) ->
@@ -1342,42 +1342,42 @@ check_start_cond(AppName, RestartType, Started, Running) ->
 
 do_start(AppName, RT, Type, From, S) ->
     RestartType = case lists:keyfind(AppName, 1, S#state.started) of
-		      {_AppName2, OldRT} ->
-			  get_restart_type(RT, OldRT);
-		      false ->
-			  RT
-		  end,
-    %% UW 990913: We check start_req instead of starting, because starting 
+                      {_AppName2, OldRT} ->
+                          get_restart_type(RT, OldRT);
+                      false ->
+                          RT
+                  end,
+    %% UW 990913: We check start_req instead of starting, because starting
     %% has already been checked.
     case lists:keymember(AppName, 1, S#state.start_req) of
-	false ->
-	    {true, Appl} = get_loaded(AppName),
-	    Start_req = S#state.start_req,
-	    spawn_starter(undefined, Appl, S, Type),
-	    Starting = case lists:keymember(AppName, 1, S#state.starting) of
-			   false ->
-			       %% UW: don't know if this is necessary
-			       [{AppName, RestartType, Type, From} | 
-				S#state.starting];
-			   true ->
-			       S#state.starting
-		       end,
-	    S#state{starting = Starting, 
-		    start_req = [{AppName, From} | Start_req]};
-	true -> % otherwise we're already starting the app...
-	    S
+        false ->
+            {true, Appl} = get_loaded(AppName),
+            Start_req = S#state.start_req,
+            spawn_starter(undefined, Appl, S, Type),
+            Starting = case lists:keymember(AppName, 1, S#state.starting) of
+                           false ->
+                               %% UW: don't know if this is necessary
+                               [{AppName, RestartType, Type, From} |
+                                S#state.starting];
+                           true ->
+                               S#state.starting
+                       end,
+            S#state{starting = Starting,
+                    start_req = [{AppName, From} | Start_req]};
+        true -> % otherwise we're already starting the app...
+            S
     end.
-    
+
 spawn_starter(From, Appl, S, Type) ->
     spawn_link(?MODULE, init_starter, [From, Appl, S, Type]).
 
 init_starter(_From, Appl, S, Type) ->
     process_flag(trap_exit, true),
     AppName = Appl#appl.name,
-    gen_server:cast(?AC, {application_started, AppName, 
-			  catch start_appl(Appl, S, Type)}).
+    gen_server:cast(?AC, {application_started, AppName,
+                          catch start_appl(Appl, S, Type)}).
 
-reply(undefined, _Reply) -> 
+reply(undefined, _Reply) ->
     ok;
 reply(From, Reply) -> gen_server:reply(From, Reply).
 
@@ -1408,7 +1408,7 @@ start_appl(Appl, S, Type) ->
             end
     end.
 
-    
+
 %%-----------------------------------------------------------------
 %% Stop application locally.
 %%-----------------------------------------------------------------
@@ -1422,7 +1422,7 @@ stop_appl(AppName, undefined, Type) ->
     info_exited(AppName, stopped, Type);
 stop_appl(_AppName, _Id, _Type) ->
     %% Distributed application stopped
-    ok. 
+    ok.
 
 keysearchdelete(Key, Pos, List) ->
     ksd(Key, Pos, List, []).
@@ -1433,12 +1433,12 @@ ksd(Key, Pos, [H | T], Rest) ->
     ksd(Key, Pos, T, [H | Rest]);
 ksd(_Key, _Pos, [], _Rest) ->
     false.
-    
+
 keyreplaceadd(Key, Pos, List, New) ->
     %% Maintains the order!
     case lists:keymember(Key, Pos, List) of
-	true -> keyreplace(Key, Pos, List, New);
-	false -> [New | List]
+        true -> keyreplace(Key, Pos, List, New);
+        false -> [New | List]
     end.
 
 validRestartType(permanent)   -> true;
@@ -1449,7 +1449,7 @@ validRestartType(RestartType) ->
 
 nd({distributed, Node}) -> Node;
 nd(_) -> node().
-	  
+
 get_restart_type(undefined, OldRT) ->
     OldRT;
 get_restart_type(RT, _OldRT) ->
@@ -1462,50 +1462,50 @@ get_appl_name(Appl) -> throw({error, {bad_application, Appl}}).
 make_appl(Name) when is_atom(Name) ->
     FName = atom_to_list(Name) ++ ".app",
     case code:where_is_file(FName) of
-	non_existing ->
-	    {error, {file:format_error(enoent), FName}};
-	FullName ->
-	    case prim_consult(FullName) of
-		{ok, [Application]} ->
-		    {ok, make_appl_i(Application)};
-		{error, Reason} -> 
-		    {error, {file:format_error(Reason), FName}}
-	    end
+        non_existing ->
+            {error, {file:format_error(enoent), FName}};
+        FullName ->
+            case prim_consult(FullName) of
+                {ok, [Application]} ->
+                    {ok, make_appl_i(Application)};
+                {error, Reason} ->
+                    {error, {file:format_error(Reason), FName}}
+            end
     end;
 make_appl(Application) ->
     {ok, make_appl_i(Application)}.
 
 prim_consult(FullName) ->
     case erl_prim_loader:get_file(FullName) of
-	{ok, Bin, _} ->
-	    case erl_scan:string(binary_to_list(Bin)) of
-		{ok, Tokens, _EndLine} ->
-		    prim_parse(Tokens, []);
-		{error, Reason, _EndLine} ->
-		    {error, Reason}
-	    end;
-	error ->
-	    {error, enoent}
+        {ok, Bin, _} ->
+            case erl_scan:string(binary_to_list(Bin)) of
+                {ok, Tokens, _EndLine} ->
+                    prim_parse(Tokens, []);
+                {error, Reason, _EndLine} ->
+                    {error, Reason}
+            end;
+        error ->
+            {error, enoent}
     end.
 
 prim_parse(Tokens, Acc) ->
     case lists:splitwith(fun(T) -> element(1,T) =/= dot end, Tokens) of
-	{[], []} ->
-	    {ok, lists:reverse(Acc)};
-	{Tokens2, [{dot,_} = Dot | Rest]} ->
-	    case erl_parse:parse_term(Tokens2 ++ [Dot]) of
-		{ok, Term} ->
-		    prim_parse(Rest, [Term | Acc]);
-		{error, _R} = Error ->
-		    Error
-	    end;
-	{Tokens2, []} ->
-	    case erl_parse:parse_term(Tokens2) of
-		{ok, Term} ->
-		    {ok, lists:reverse([Term | Acc])};
-		{error, _R} = Error ->
-		    Error
-	    end
+        {[], []} ->
+            {ok, lists:reverse(Acc)};
+        {Tokens2, [{dot,_} = Dot | Rest]} ->
+            case erl_parse:parse_term(Tokens2 ++ [Dot]) of
+                {ok, Term} ->
+                    prim_parse(Rest, [Term | Acc]);
+                {error, _R} = Error ->
+                    Error
+            end;
+        {Tokens2, []} ->
+            case erl_parse:parse_term(Tokens2) of
+                {ok, Term} ->
+                    {ok, lists:reverse([Term | Acc])};
+                {error, _R} = Error ->
+                    Error
+            end
     end.
 
 make_appl_i({application, Name, Opts}) when is_atom(Name), is_list(Opts) ->
@@ -1516,18 +1516,18 @@ make_appl_i({application, Name, Opts}) when is_atom(Name), is_list(Opts) ->
     Regs = get_opt(registered, Opts, []),
     Apps = get_opt(applications, Opts, []),
     Mod =
-	case get_opt(mod, Opts, []) of
-	    {M,_A}=MA when is_atom(M) -> MA;
-	    [] -> [];
-	    Other -> throw({error, {badstartspec, Other}})
-	end,
+        case get_opt(mod, Opts, []) of
+            {M,_A}=MA when is_atom(M) -> MA;
+            [] -> [];
+            Other -> throw({error, {badstartspec, Other}})
+        end,
     Phases = get_opt(start_phases, Opts, undefined),
     Env = get_opt(env, Opts, []),
     MaxP = get_opt(maxP, Opts, infinity),
     MaxT = get_opt(maxT, Opts, infinity),
     IncApps = get_opt(included_applications, Opts, []),
     {#appl_data{name = Name, regs = Regs, mod = Mod, phases = Phases,
-		mods = Mods, inc_apps = IncApps, maxP = MaxP, maxT = MaxT},
+                mods = Mods, inc_apps = IncApps, maxP = MaxP, maxT = MaxT},
      Env, IncApps, Descr, Id, Vsn, Apps};
 make_appl_i({application, Name, Opts}) when is_list(Opts) ->
     throw({error,{invalid_name,Name}});
@@ -1537,7 +1537,7 @@ make_appl_i(Appl) -> throw({error, {bad_application, Appl}}).
 
 
 %%-----------------------------------------------------------------
-%% Merge current applications with changes.  
+%% Merge current applications with changes.
 %%-----------------------------------------------------------------
 
 %% do_change_apps(Applications, Config, OldAppls) -> NewAppls
@@ -1556,24 +1556,24 @@ do_change_apps(Applications, Config, OldAppls) ->
     %% Report errors, but do not terminate
     %% (backwards compatible behaviour)
     lists:foreach(fun({error, {SysFName, Line, Str}}) ->
-			  Str2 = lists:flatten(io_lib:format("~p: ~w: ~s~n",
-							     [SysFName, Line, Str])),
-			  error_logger:format(Str2, [])
-		  end,
-		  Errors),
+                          Str2 = lists:flatten(io_lib:format("~p: ~w: ~s~n",
+                                                             [SysFName, Line, Str])),
+                          error_logger:format(Str2, [])
+                  end,
+                  Errors),
 
     map(fun(Appl) ->
-		AppName = Appl#appl.name,
-		case is_loaded_app(AppName, Applications) of
-		    {true, Application} ->
-			do_change_appl(make_appl(Application),
-				       Appl, SysConfig);
+                AppName = Appl#appl.name,
+                case is_loaded_app(AppName, Applications) of
+                    {true, Application} ->
+                        do_change_appl(make_appl(Application),
+                                       Appl, SysConfig);
 
-		    %% ignored removed apps - handled elsewhere
-		    false ->
-			Appl
-		end
-	end, OldAppls).
+                    %% ignored removed apps - handled elsewhere
+                    false ->
+                        Appl
+                end
+        end, OldAppls).
 
 is_loaded_app(AppName, [{application, AppName, App} | _]) ->
     {true, {application, AppName, App}};
@@ -1581,7 +1581,7 @@ is_loaded_app(AppName, [_ | T]) -> is_loaded_app(AppName, T);
 is_loaded_app(_AppName, []) -> false.
 
 do_change_appl({ok, {ApplData, Env, IncApps, Descr, Id, Vsn, Apps}},
-	       OldAppl, Config) ->
+               OldAppl, Config) ->
     AppName = OldAppl#appl.name,
 
     %% Merge application env with env from sys.config, if any
@@ -1594,32 +1594,32 @@ do_change_appl({ok, {ApplData, Env, IncApps, Descr, Id, Vsn, Apps}},
 
     %% included_apps is made into an env parameter as well
     NewEnv3 = keyreplaceadd(included_applications, 1, NewEnv2,
-			    {included_applications, IncApps}),
+                            {included_applications, IncApps}),
 
     %% Update ets table with new application env
     del_env(AppName),
     add_env(AppName, NewEnv3),
 
     OldAppl#appl{appl_data=ApplData,
-		 descr=Descr,
-		 id=Id,
-		 vsn=Vsn,
-		 inc_apps=IncApps,
-		 apps=Apps};
+                 descr=Descr,
+                 id=Id,
+                 vsn=Vsn,
+                 inc_apps=IncApps,
+                 apps=Apps};
 do_change_appl({error, _R} = Error, _Appl, _ConfData) ->
     throw(Error).
 
 get_opt(Key, List, Default) ->
     case lists:keyfind(Key, 1, List) of
-	{_Key, Val} -> Val;
-	_ -> Default
+        {_Key, Val} -> Val;
+        _ -> Default
     end.
 
 get_cmd_env(Name) ->
     case init:get_argument(Name) of
-	{ok, Args} ->
-	   foldl(fun(List, Res) -> conv(List) ++ Res end, [], Args);
-	_ -> []
+        {ok, Args} ->
+           foldl(fun(List, Res) -> conv(List) ++ Res end, [], Args);
+        _ -> []
     end.
 
 conv([Key, Val | T]) ->
@@ -1627,27 +1627,27 @@ conv([Key, Val | T]) ->
 conv(_) -> [].
 
 %%% Fix some day: eliminate the duplicated code here
-make_term(Str) -> 
+make_term(Str) ->
     case erl_scan:string(Str) of
-	{ok, Tokens, _} ->		  
-	    case erl_parse:parse_term(Tokens ++ [{dot, 1}]) of
-		{ok, Term} ->
-		    Term;
-		{error, {_,M,Reason}} ->
-		    error_logger:format("application_controller: ~s: ~s~n",
-					[M:format_error(Reason), Str]),
-		    throw({error, {bad_environment_value, Str}})
-	    end;
-	{error, {_,M,Reason}, _} ->
-	    error_logger:format("application_controller: ~s: ~s~n",
-				[M:format_error(Reason), Str]),
-	    throw({error, {bad_environment_value, Str}})
+        {ok, Tokens, _} ->
+            case erl_parse:parse_term(Tokens ++ [{dot, 1}]) of
+                {ok, Term} ->
+                    Term;
+                {error, {_,M,Reason}} ->
+                    error_logger:format("application_controller: ~s: ~s~n",
+                                        [M:format_error(Reason), Str]),
+                    throw({error, {bad_environment_value, Str}})
+            end;
+        {error, {_,M,Reason}, _} ->
+            error_logger:format("application_controller: ~s: ~s~n",
+                                [M:format_error(Reason), Str]),
+            throw({error, {bad_environment_value, Str}})
     end.
 
 get_env_i(Name, #state{conf_data = ConfData}) when is_list(ConfData) ->
     case lists:keyfind(Name, 1, ConfData) of
-	{_Name, Env} -> Env;
-	_ -> []
+        {_Name, Env} -> Env;
+        _ -> []
     end;
 get_env_i(_Name, _) -> [].
 
@@ -1657,11 +1657,11 @@ merge_env(Env1, Env2) ->
 
 merge_env([{App, AppEnv1} | T], Env2, Res) ->
     case get_env_key(App, Env2) of
-	{value, AppEnv2, RestEnv2} ->
-	    NewAppEnv = merge_app_env(AppEnv1, AppEnv2),
-	    merge_env(T, RestEnv2, [{App, NewAppEnv} | Res]);
-	_ ->
-	    merge_env(T, Env2, [{App, AppEnv1} | Res])
+        {value, AppEnv2, RestEnv2} ->
+            NewAppEnv = merge_app_env(AppEnv1, AppEnv2),
+            merge_env(T, RestEnv2, [{App, NewAppEnv} | Res]);
+        _ ->
+            merge_env(T, Env2, [{App, AppEnv1} | Res])
     end;
 merge_env([], Env2, Res) ->
     Env2 ++ Res.
@@ -1672,10 +1672,10 @@ merge_app_env(Env1, Env2) ->
 
 merge_app_env([{Key, Val} | T], Env2, Res) ->
     case get_env_key(Key, Env2) of
-	{value, NewVal, RestEnv} ->
-	    merge_app_env(T, RestEnv, [{Key, NewVal}|Res]);
-	_ ->
-	    merge_app_env(T, Env2, [{Key, Val} | Res])
+        {value, NewVal, RestEnv} ->
+            merge_app_env(T, RestEnv, [{Key, NewVal}|Res]);
+        _ ->
+            merge_app_env(T, Env2, [{Key, Val} | Res])
     end;
 merge_app_env([], Env2, Res) ->
     Env2 ++ Res.
@@ -1689,17 +1689,17 @@ get_env_key([], _Key, Res) -> Res.
 
 add_env(Name, Env) ->
     foreach(fun({Key, Value}) ->
-			  ets:insert(?ac_tab, {{env, Name, Key}, Value})
-		  end,
-		  Env).
+                          ets:insert(?ac_tab, {{env, Name, Key}, Value})
+                  end,
+                  Env).
 
 del_env(Name) ->
     ets:match_delete(?ac_tab, {{env, Name, '_'}, '_'}).
 
 check_user() ->
     case whereis(user) of
-	User when is_pid(User) -> group_leader(User, self());
-	_ -> ok
+        User when is_pid(User) -> group_leader(User, self());
+        _ -> ok
     end.
 
 
@@ -1714,7 +1714,7 @@ do_prep_config_change([], EnvBefore) ->
 do_prep_config_change([{App, _Id} | Apps], EnvBefore) ->
     Env = application:get_all_env(App),
     do_prep_config_change(Apps, [{App, Env} | EnvBefore]).
-    
+
 
 
 %%-----------------------------------------------------------------
@@ -1730,48 +1730,48 @@ do_config_change([], _EnvBefore, Errors) ->
 do_config_change([{App, _Id} | Apps], EnvBefore, Errors) ->
     AppEnvNow = lists:sort(application:get_all_env(App)),
     AppEnvBefore = case lists:keyfind(App, 1, EnvBefore) of
-		       false ->
-			   [];
-		       {App, AppEnvBeforeT} ->
-			   lists:sort(AppEnvBeforeT)
-		   end,
-    Res = 
-	case AppEnvNow of
-	    AppEnvBefore ->
-		ok;
-	    _ ->
-		case do_config_diff(AppEnvNow, AppEnvBefore) of
-		    {[], [], []} ->
-			ok;
-		    {Changed, New, Removed} ->
-			case application:get_key(App, mod) of
-			    {ok, {Mod, _Para}} ->
-				case catch Mod:config_change(Changed, New, 
-							     Removed) of
-				    ok ->
-					ok;
-				    %% It is not considered as an error
-				    %% if the cb-function is not defined 
-				    {'EXIT', {undef, _}} ->
-					ok;
-				    {error, _} = Error ->
-					Error;
-				    Else ->
-					{error, Else}
-				end;
-			    {ok, []} ->
-				{error, {module_not_defined, App}};
-			    undefined ->
-				{error, {application_not_found, App}}
-			end
-		end
-	end,
-    
+                       false ->
+                           [];
+                       {App, AppEnvBeforeT} ->
+                           lists:sort(AppEnvBeforeT)
+                   end,
+    Res =
+        case AppEnvNow of
+            AppEnvBefore ->
+                ok;
+            _ ->
+                case do_config_diff(AppEnvNow, AppEnvBefore) of
+                    {[], [], []} ->
+                        ok;
+                    {Changed, New, Removed} ->
+                        case application:get_key(App, mod) of
+                            {ok, {Mod, _Para}} ->
+                                case catch Mod:config_change(Changed, New,
+                                                             Removed) of
+                                    ok ->
+                                        ok;
+                                    %% It is not considered as an error
+                                    %% if the cb-function is not defined
+                                    {'EXIT', {undef, _}} ->
+                                        ok;
+                                    {error, _} = Error ->
+                                        Error;
+                                    Else ->
+                                        {error, Else}
+                                end;
+                            {ok, []} ->
+                                {error, {module_not_defined, App}};
+                            undefined ->
+                                {error, {application_not_found, App}}
+                        end
+                end
+        end,
+
     case Res of
-	ok ->
-	    do_config_change(Apps, EnvBefore, Errors);
-	{error, NewError} ->
-	    do_config_change(Apps, EnvBefore,[NewError | Errors])
+        ok ->
+            do_config_change(Apps, EnvBefore, Errors);
+        {error, NewError} ->
+            do_config_change(Apps, EnvBefore,[NewError | Errors])
     end.
 
 
@@ -1788,13 +1788,13 @@ do_config_diff(AppEnvNow, [], {Changed, New}) ->
     {Changed, AppEnvNow++New, []};
 do_config_diff([{Env, Value} | AppEnvNow], AppEnvBefore, {Changed, New}) ->
     case lists:keyfind(Env, 1, AppEnvBefore) of
-	{Env, Value} ->
-	    do_config_diff(AppEnvNow, lists:keydelete(Env,1,AppEnvBefore), {Changed, New});
-	{Env, _OtherValue} ->
-	    do_config_diff(AppEnvNow, lists:keydelete(Env,1,AppEnvBefore), 
-			   {[{Env, Value} | Changed], New});
-	false ->
-	    do_config_diff(AppEnvNow, AppEnvBefore, {Changed, [{Env, Value}|New]})
+        {Env, Value} ->
+            do_config_diff(AppEnvNow, lists:keydelete(Env,1,AppEnvBefore), {Changed, New});
+        {Env, _OtherValue} ->
+            do_config_diff(AppEnvNow, lists:keydelete(Env,1,AppEnvBefore),
+                           {[{Env, Value} | Changed], New});
+        false ->
+            do_config_diff(AppEnvNow, AppEnvBefore, {Changed, [{Env, Value}|New]})
     end.
 
 
@@ -1803,41 +1803,41 @@ do_config_diff([{Env, Value} | AppEnvNow], AppEnvBefore, {Changed, New}) ->
 %%-----------------------------------------------------------------
 check_conf() ->
     case init:get_argument(config) of
-	{ok, Files} ->
-	    {ok, lists:foldl(
-		   fun([File], Env) ->
-			   BFName = filename:basename(File,".config"),
-			   FName = filename:join(filename:dirname(File),
-						 BFName ++ ".config"),
-			   case load_file(FName) of
-			       {ok, NewEnv} ->
-				   %% OTP-4867
-				   %% sys.config may now contain names of
-				   %% other .config files as well as
-				   %% configuration parameters.
-				   %% Therefore read and merge contents.
-				   if
-				       BFName =:= "sys" ->
-					   {ok, SysEnv, Errors} =
-					       check_conf_sys(NewEnv),
+        {ok, Files} ->
+            {ok, lists:foldl(
+                   fun([File], Env) ->
+                           BFName = filename:basename(File,".config"),
+                           FName = filename:join(filename:dirname(File),
+                                                 BFName ++ ".config"),
+                           case load_file(FName) of
+                               {ok, NewEnv} ->
+                                   %% OTP-4867
+                                   %% sys.config may now contain names of
+                                   %% other .config files as well as
+                                   %% configuration parameters.
+                                   %% Therefore read and merge contents.
+                                   if
+                                       BFName =:= "sys" ->
+                                           {ok, SysEnv, Errors} =
+                                               check_conf_sys(NewEnv),
 
-					   %% Report first error, if any, and
-					   %% terminate
-					   %% (backwards compatible behaviour)
-					   case Errors of
-					       [] ->
-						   merge_env(Env, SysEnv);
-					       [{error, {SysFName, Line, Str}}|_] ->
-						   throw({error, {SysFName, Line, Str}})
-					   end;
-				       true ->
-					   merge_env(Env, NewEnv)
-				   end;
-			       {error, {Line, _Mod, Str}} ->
-				   throw({error, {FName, Line, Str}})
-			   end
-		   end, [], Files)};
-	_ -> {ok, []}
+                                           %% Report first error, if any, and
+                                           %% terminate
+                                           %% (backwards compatible behaviour)
+                                           case Errors of
+                                               [] ->
+                                                   merge_env(Env, SysEnv);
+                                               [{error, {SysFName, Line, Str}}|_] ->
+                                                   throw({error, {SysFName, Line, Str}})
+                                           end;
+                                       true ->
+                                           merge_env(Env, NewEnv)
+                                   end;
+                               {error, {Line, _Mod, Str}} ->
+                                   throw({error, {FName, Line, Str}})
+                           end
+                   end, [], Files)};
+        _ -> {ok, []}
     end.
 
 check_conf_sys(Env) ->
@@ -1847,10 +1847,10 @@ check_conf_sys([File|T], SysEnv, Errors) when is_list(File) ->
     BFName = filename:basename(File, ".config"),
     FName = filename:join(filename:dirname(File), BFName ++ ".config"),
     case load_file(FName) of
-	{ok, NewEnv} ->
-	    check_conf_sys(T, merge_env(SysEnv, NewEnv), Errors);
-	{error, {Line, _Mod, Str}} ->
-	    check_conf_sys(T, SysEnv, [{error, {FName, Line, Str}}|Errors])
+        {ok, NewEnv} ->
+            check_conf_sys(T, merge_env(SysEnv, NewEnv), Errors);
+        {error, {Line, _Mod, Str}} ->
+            check_conf_sys(T, SysEnv, [{error, {FName, Line, Str}}|Errors])
     end;
 check_conf_sys([Tuple|T], SysEnv, Errors) ->
     check_conf_sys(T, merge_env(SysEnv, [Tuple]), Errors);
@@ -1860,44 +1860,44 @@ check_conf_sys([], SysEnv, Errors) ->
 load_file(File) ->
     %% We can't use file:consult/1 here. Too bad.
     case erl_prim_loader:get_file(File) of
-	{ok, Bin, _FileName} ->
-	    %% Make sure that there is some whitespace at the end of the string
-	    %% (so that reading a file with no NL following the "." will work).
-	    Str = binary_to_list(Bin) ++ " ",
-	    scan_file(Str);
-	error ->
-	    {error, {none, open_file, "configuration file not found"}}
+        {ok, Bin, _FileName} ->
+            %% Make sure that there is some whitespace at the end of the string
+            %% (so that reading a file with no NL following the "." will work).
+            Str = binary_to_list(Bin) ++ " ",
+            scan_file(Str);
+        error ->
+            {error, {none, open_file, "configuration file not found"}}
     end.
 
 scan_file(Str) ->
     case erl_scan:tokens([], Str, 1) of
-	{done, {ok, Tokens, _}, Left} ->
-	    case erl_parse:parse_term(Tokens) of
-		{ok,L}=Res when is_list(L) ->
-		    case only_ws(Left) of
-			true ->
-			    Res;
-			false ->
-			    %% There was trailing garbage found after the list.
-			    config_error()
-		    end;
-		{ok,_} ->
-		    %% Parsing succeeded but the result is not a list.
-		    config_error();
-		Error ->
-		    Error
-	    end;
-	{done, Result, _} ->
-	    {error, {none, parse_file, tuple_to_list(Result)}};
-	{more, _} ->
-	    {error, {none, load_file, "no ending <dot> found"}}
+        {done, {ok, Tokens, _}, Left} ->
+            case erl_parse:parse_term(Tokens) of
+                {ok,L}=Res when is_list(L) ->
+                    case only_ws(Left) of
+                        true ->
+                            Res;
+                        false ->
+                            %% There was trailing garbage found after the list.
+                            config_error()
+                    end;
+                {ok,_} ->
+                    %% Parsing succeeded but the result is not a list.
+                    config_error();
+                Error ->
+                    Error
+            end;
+        {done, Result, _} ->
+            {error, {none, parse_file, tuple_to_list(Result)}};
+        {more, _} ->
+            {error, {none, load_file, "no ending <dot> found"}}
     end.
 
 only_ws([C|Cs]) when C =< $\s -> only_ws(Cs);
 only_ws([$%|Cs]) -> only_ws(strip_comment(Cs));   % handle comment
 only_ws([_|_]) -> false;
 only_ws([]) -> true.
-    
+
 strip_comment([$\n|Cs]) -> Cs;
 strip_comment([_|Cs]) -> strip_comment(Cs);
 strip_comment([]) -> [].
@@ -1912,57 +1912,57 @@ config_error() ->
 %%-----------------------------------------------------------------
 info_started(Name, Node) ->
     Rep = [{application, Name},
-	   {started_at, Node}],
+           {started_at, Node}],
     error_logger:info_report(progress, Rep).
 
 info_exited(Name, Reason, Type) ->
     Rep = [{application, Name},
-	   {exited, Reason},
-	   {type, Type}],
+           {exited, Reason},
+           {type, Type}],
     error_logger:info_report(Rep).
 
 
 %%-----------------------------------------------------------------
-%% Reply to all processes waiting this application to be started.  
+%% Reply to all processes waiting this application to be started.
 %%-----------------------------------------------------------------
 reply_to_requester(AppName, Start_req, Res) ->
     R = case Res of
-	    {ok, _Id} ->
-		ok;
-	    {info, Reason} ->
-		{error, Reason};
-	    Error ->
-		Error
-	end,
+            {ok, _Id} ->
+                ok;
+            {info, Reason} ->
+                {error, Reason};
+            Error ->
+                Error
+        end,
 
     lists:foldl(fun(Sp, AccIn) ->
-			case Sp of
-			    {AppName, From} ->
-				reply(From, R),
-				AccIn;
-			    _ ->
-				[Sp | AccIn]
-			end
-		end,
-		[],
-		Start_req).
-    
+                        case Sp of
+                            {AppName, From} ->
+                                reply(From, R),
+                                AccIn;
+                            _ ->
+                                [Sp | AccIn]
+                        end
+                end,
+                [],
+                Start_req).
+
 
 %%-----------------------------------------------------------------
-%% Update the environment variable permission for an application.  
+%% Update the environment variable permission for an application.
 %%-----------------------------------------------------------------
 update_permissions(AppName, Bool) ->
     T = {env, kernel, permissions},
     case ets:lookup(?ac_tab, T) of
-	[] ->
-	    ets:insert(?ac_tab, {T, [{AppName, Bool}]});
-	[{_, Perm}] ->
-	    Perm2 = lists:keydelete(AppName, 1, Perm),
-	    ets:insert(?ac_tab, {T, [{AppName, Bool}|Perm2]})
+        [] ->
+            ets:insert(?ac_tab, {T, [{AppName, Bool}]});
+        [{_, Perm}] ->
+            Perm2 = lists:keydelete(AppName, 1, Perm),
+            ets:insert(?ac_tab, {T, [{AppName, Bool}|Perm2]})
     end.
 
 %%-----------------------------------------------------------------
-%% These functions are only to be used from testsuites.  
+%% These functions are only to be used from testsuites.
 %%-----------------------------------------------------------------
 test_change_apps(Apps, Conf) ->
     Res = test_make_apps(Apps, []),
@@ -1992,8 +1992,8 @@ test_make_apps([A|Apps], Res) ->
 
 to_string(Term) ->
     case io_lib:printable_list(Term) of
-	true ->
-	    Term;
-	false ->
-	    lists:flatten(io_lib:write(Term))
+        true ->
+            Term;
+        false ->
+            lists:flatten(io_lib:write(Term))
     end.
