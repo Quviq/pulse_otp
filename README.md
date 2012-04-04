@@ -10,14 +10,15 @@ added modules that we have needed while testing other applications.
 Included modules
 ----------------
 Currently the following modules are provided:
-*  pulse_gen_server
-*  pulse_supervisor
-*  pulse_application
-*  pulse_gen
-*  pulse_proc_lib
-*  pulse_application_master
-*  pulse_application_controller
-*  pulse_application_starter
+
+ * pulse_gen_server
+ * pulse_supervisor
+ * pulse_application
+ * pulse_gen
+ * pulse_proc_lib
+ * pulse_application_master
+ * pulse_application_controller
+ * pulse_application_starter
 
 Installation
 ------------
@@ -56,6 +57,7 @@ The modules are from Erlang R15B, but in order to compile also on R14
 some callback-specs have been commented out.
 
 Other changes to the original modules include:
-*  renaming atoms (xxxx to pulse_xxxx)
-*  renaminge ETS table names
-*  the above mentioned changes in `pulse_application`
+
+ * renaming atoms (xxxx to pulse_xxxx)
+ * renaminge ETS table names
+ * the above mentioned changes in `pulse_application`
