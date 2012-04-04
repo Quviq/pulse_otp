@@ -1,7 +1,8 @@
 %%
 %% %CopyrightBegin%
 %%
-%% Copyright Ericsson AB 1996-2011. All Rights Reserved.
+%% This file is a copy of the Erlang OTP behaviour "proc_lib"
+%% as provided in the Erlang OTP release with some minor modifications.
 %%
 %% The contents of this file are subject to the Erlang Public License,
 %% Version 1.1, (the "License"); you may not use this file except in
